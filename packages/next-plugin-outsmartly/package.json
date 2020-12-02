@@ -1,0 +1,28 @@
+{
+  "name": "@outsmartly/next-plugin-outsmartly",
+  "version": "0.0.47",
+  "description": "Next.js plugin for use with Outsmartly.",
+  "author": "Outsmartly <support@outsmartly.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/outsmartly/outsmartly/tree/master/packages/next-plugin-outsmartly",
+  "bugs": {
+    "url": "https://github.com/outsmartly/outsmartly/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/outsmartly/outsmartly.git",
+    "directory": "packages/next-plugin-outsmartly"
+  },
+  "peerDependencies": {
+    "next": "^9.0.0"
+  },
+  "dependencies": {
+    "@outsmartly/babel-plugin-outsmartly-react": "^0.0.14",
+    "@outsmartly/cli": "^0.0.23",
+    "@outsmartly/react": "^0.0.25"
+  },
+  "nextjs": {
+    "name": "Outsmartly SDK for Next.js",
+    "required-env": []
+  }
+}
