@@ -1,0 +1,39 @@
+{
+  "name": "@outsmartly/react",
+  "version": "0.0.10",
+  "description": "Client-side SDK for React (or React-like libraries) and Outsmartly",
+  "author": "Outsmartly <hello@outsmartly.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/outsmartly/outsmartly/",
+  "bugs": {
+    "url": "https://github.com/outsmartly/outsmartly/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/outsmartly/outsmartly.git",
+    "directory": "packages/react"
+  },
+  "main": "./dist/cjs/index.js",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "jay-scripts start",
+    "build": "jay-scripts build",
+    "test": "jay-scripts test"
+  },
+  "peerDependencies": {
+    "react": "*"
+  },
+  "devDependencies": {
+    "@jayphelps/jay-scripts": "0.0.47",
+    "@types/react": "^16.9.51",
+    "react": "*"
+  }
+}

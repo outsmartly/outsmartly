@@ -1,0 +1,159 @@
+import fetch, { Response, Headers, RequestInit } from 'node-fetch';
+import { AbortSignal } from 'node-fetch/externals';
+
+const origin = process.env.OUTSMARLY_API_ORIGIN ?? 'https://api.edgebailey.com';
+
+export class APIError extends Error {
+  constructor(public response: Response, public json: any) {
+    super('API error');
+    this.name = 'APIError';
+  }
+}
+
+export interface APIResponseBody<T> {
+  success: boolean;
+  errors: string[];
+  result: T;
+}
+
+declare module 'node-fetch' {
+  interface Response {
+    // :'( node-fetch is wrong
+    json<R>(): Promise<R>;
+  }
+}
+
+export interface APIFetchOptions {
+  cliVersion: string;
+  bearerToken?: string;
+  signal?: AbortSignal;
+  init?: RequestInit;
+}
+
+export async function apiFetch<R>(
+  url: string,
+  options: APIFetchOptions,
+): Promise<R> {
+  const { bearerToken, cliVersion, signal = null, init } = options;
+  const headers = new Headers(init?.headers);
+  const platform = `(${process.platform}; ${process.arch})`;
+  const system = `NodeJS/${process.version.slice(1)} ${platform}`;
+  const userAgent = `Outsmartly-CLI/${cliVersion} (+abuse@outsmartly.com) ${system}`;
+
+  const resp = await fetch(url, {
+    ...init,
+    signal,
+    headers: {
+      accept: 'application/vnd.outsmartly.v1+json',
+      authorization: `Bearer ${bearerToken}`,
+      'content-type': 'application/json',
+      'user-agent': userAgent,
+      ...Object.fromEntries(headers),
+    },
+  });
+
+  let json;
+
+  try {
+    json = await resp.json<APIResponseBody<R>>();
+  } catch (e) {
+    throw new APIError(resp, {
+      errors: [e.message],
+    });
+  }
+
+  if (!resp.ok || json.success === false) {
+    throw new APIError(resp, json);
+  }
+
+  return json.result;
+}
+
+export interface Site {
+  id: string;
+  host: string;
+  name: string;
+  configRaw: string;
+  workerId: string;
+  createdAt: string;
+  updatedAt: string;
+  userIds: string[];
+}
+
+export interface PostSite {
+  host: string;
+  name: string;
+  configRaw: string;
+  analysis: Analysis;
+  userIds: [];
+}
+
+export async function postSite(
+  site: PostSite,
+  options: {
+    bearerToken: string;
+    cliVersion: string;
+    signal?: AbortSignal;
+  },
+): Promise<Site> {
+  return await apiFetch(`${origin}/sites`, {
+    ...options,
+    init: {
+      method: 'POST',
+      body: JSON.stringify(site),
+    },
+  });
+}
+
+export interface PropertyPathsTrieNode {
+  key: string;
+  sliceIds: string[];
+  properties: {
+    [key: string]: PropertyPathsTrieNode;
+  };
+}
+
+export interface SliceMeta {
+  instructionsKeyPath: string[];
+  propertyKeyPath: string[];
+}
+
+export interface ComponentAnalysis {
+  scope: string;
+  filename: string;
+  propertyPathsTrie: PropertyPathsTrieNode;
+  sliceMetaById: {
+    [key: string]: SliceMeta;
+  };
+  moduleThunkRaw: string;
+}
+
+export interface Analysis {
+  components: { [key: string]: ComponentAnalysis };
+  vfs: { [key: string]: string };
+}
+
+export interface PatchSite {
+  host: string;
+  configRaw?: string;
+  analysis?: Analysis;
+}
+
+export async function patchSite(
+  sitePatch: PatchSite,
+  options: {
+    bearerToken: string;
+    cliVersion: string;
+    signal?: AbortSignal;
+  },
+): Promise<Site> {
+  const { host } = sitePatch;
+
+  return await apiFetch(`${origin}/sites/${host}`, {
+    ...options,
+    init: {
+      method: 'PATCH',
+      body: JSON.stringify(sitePatch),
+    },
+  });
+}

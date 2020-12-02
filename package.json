@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "@outsmartly/product",
+  "version": "0.0.0",
+  "description": "Monorepo for the Outsmartly product",
+  "author": "Outsmartly <hello@outsmartly.com>",
+  "license": "SEE LICENSES IN PACKAGES",
+  "homepage": "https://github.com/outsmartly/product/",
+  "bugs": {
+    "url": "https://github.com/outsmartly/product/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/outsmartly/product.git"
+  },
+  "scripts": {
+    "lerna": "lerna"
+  },
+  "devDependencies": {
+    "lerna": "^3.22.1"
+  }
+}
