@@ -1,5 +1,5 @@
 node_modules
 .vscode
-package-lock.json
 *-debug.log
 *-error.log
+yarn.lock

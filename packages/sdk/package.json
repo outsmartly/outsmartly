@@ -26,14 +26,10 @@
   "scripts": {
     "start": "jay-scripts start",
     "build": "jay-scripts build",
-    "test": "jay-scripts test"
+    "test": "jay-scripts test",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "react": "*"
-  },
-  "devDependencies": {
-    "@jayphelps/jay-scripts": "0.0.47",
-    "@types/react": "^16.9.51",
     "react": "*"
   }
 }
