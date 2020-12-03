@@ -22,8 +22,6 @@
   },
   "devDependencies": {
     "@jayphelps/jay-scripts": "0.0.47",
-    "@oclif/dev-cli": "^1",
-    "@oclif/test": "^1",
     "@types/babel__core": "^7.1.9",
     "@types/chai": "^4",
     "@types/chalk": "^2.2.0",
