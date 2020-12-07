@@ -1,18 +1,18 @@
 # Installation
 
-  Below are the instructions you will need to get up and running with Outsmartly
+  Below are the instructions you will need to get up and running with Outsmartly.
 
-## Part A Installing Next.js App and Outsmartly Plugin
+## Part A: Installing Next.js App and Outsmartly Plugin
   
-1. Begin by installing Next.js
+1. Begin by installing Next.js.
   
 	`yarn create next-app`
 
-2. Install Outsmartly
+2. Install Outsmartly.
 
 	`yarn add --dev @outsmartly/next-plugin-outsmartly`
   
-3. Open `package.json`. In the scripts object add `OUTSMARTLY_DEV=true` as a value of `dev`, and enter outsmartly:deploy script.
+3. Open `package.json`. In the scripts object add `OUTSMARTLY_DEV=true` as a value of `dev`, and enter `outsmartly:deploy` script.
   
     ```json
     {
@@ -38,9 +38,9 @@
 
 
 
-## Part B Setting up Next.js and Outsmartly Config File
+## Part B: Setting up Next.js and Outsmartly Config File
   
-1. cd into your Next.js app and create a Next.js config file
+1. Create a Next.js config file in the root of your directory.
   
 	`touch next.config.js`
 
@@ -61,11 +61,11 @@
     };
     ```
   
-3. Make an Outsmartly config file
+3. Stay at the root of your project and create a new Outsmartly config file. 
   
 	`touch outsmartly.config.js`
 
-4. Enter the following into your Outsmartly config file
+4. Enter the following into your Outsmartly config file.
 
     ```javascript
     export default {
@@ -84,11 +84,11 @@
 
     `origin:` Where the edge will point to, this url is a tunnel of your local site
   
-## Part C Creating Your First Override
+## Part C: Creating Your First Override
 
-1. Before creating an override, be sure to make a custom home page template. Go into the `pages` directory and create `_document.js`.
-
-	a. Write a Outsmartly tag before  `<NextScript />`.
+1. From the root of your project cd into the `pages` directory and create `_document.js`. `_document.js` is [replacing component](https://nextjs.org/docs/advanced-features/custom-app) `_app.js`. 
+   
+	a. Write a Outsmartly tag before `<NextScript />`.
 
     ```javascript
     import Document, { Html, Head, Main, NextScript } from 'next/document';
@@ -190,6 +190,7 @@
         },
       };
     }
+
     ```
 
 3. Go into your Outsmartly config and create your personalization. In this example, you are going to change the headline prop value from `Welcome Humans!` to `I have made another change. 🤯🤖`.
@@ -220,25 +221,32 @@
         },
         ],
     };
+
     ```
 
-## Part D Make Your First Override Locally
+## Part D: Make Your First Override Locally
   
 1. Go to the root of your `Next.js` project and run the development server.
 
-	`next dev`
+	`yarn dev`
 
-2. [Install cloudflared](https://developers.cloudflare.com/argo-tunnel/quickstart) on your machine. Then open a new terminal and navigate to the root of your Next.js project.  Start the cloudflare tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file.
+2. [Install cloudflared](https://developers.cloudflare.com/argo-tunnel/quickstart) on your machine. Then open a new terminal and navigate to the root of your Next.js project.  
   
 	`cloudflared tunnel http://localhost:3000`
+
+3. Start the cloudflare tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file. Note that the url will change every time you restart the tunnel.
+   
+   ```javascript
+   origin: ``
+   ```
   
-3. Open the third terminal and deploy on the Outsmartly edge server.
+4. Open the third terminal and deploy on the Outsmartly edge server.
 
 	`yarn outsmartly:deploy`
 
 4. Navigate to the browser and enter your app url. You should see your override in the browser.
 
-## Part E Deploying App with Production Origin 
+## Part E: Deploying App with Production Origin 
 
 1. Deploy your [app to Vercel](https://vercel.com/#get-started). 
 
