@@ -248,16 +248,20 @@
 
 ## Part E: Deploying App with Production Origin 
 
-1. Deploy your [app to Vercel](https://vercel.com/#get-started). 
+1. Deploy your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to add your Outsmartly token to the Vercel platform. 
+   
+    !['Enter your OutSmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607454930/Screen_Shot_2020-12-07_at_6.12.13_PM_dffzvh.png) 
 
-2. Take the url propogated by Vercel, open `outsmartly.config.js` and enter the url as a value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`.
+
+
+2. Take the url propogated by Vercel, open `outsmartly.config.js` and enter the url as a value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`.  
 
     ```javascript
     export default {
-      host: 'example.outsmartly.app',
+      host: 'portia.outsmartly.app',
       environments: [{
         name: 'production',
-        origin: 'https://outsmartly-override-example.vercel.app/',
+        origin: 'https://outsmartly-override-example.vercel.app',
       }],
       routes: [{
           path: '/',
@@ -280,13 +284,11 @@
     };
     ```
 
-3. Open a terminal, go to the root of your project and deploy to the Outsmartly edge server.
 
-	`yarn outsmartly:deploy`
   
-4. Navigate to the browser and enter your app url. You should see your override in the browser.
+3. Navigate to the browser and enter your Vercel url. You should see your override in the browser. Your override will be found in your host url `portia.outsmartly.app`.
 
-Congratulations. You have made your first override!
-<p align="left">
-  <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
-</p>
+    Congratulations. You have made your first override!
+    <p align="left">
+      <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
+    </p>
