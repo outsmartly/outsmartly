@@ -16,5 +16,9 @@
   "engines": {
     "node": ">=15",
     "npm": ">=7"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "2.2.1"
   }
 }
