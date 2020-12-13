@@ -114,16 +114,6 @@ Below are the instructions you will need to get up and running with Outsmartly.
    a. Add the `// @outsmartly` comment before the `Home` function
    b. On the bottom of the file write a server-side function and return the prop with the headline value of `Welcome Humans`
 
-   ```
-   export async function getServerSideProps() {
-     return {
-       props: {
-         headline: 'Welcome humans!',
-       },
-     };
-   }
-   ```
-
    ```jsx
    import { useState } from "react";
    import Head from "next/head";
@@ -225,39 +215,19 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-## Part D: Make Your First Override Locally
+## Part D: Deploying App with Production Origin
 
-1. Go to the root of your `Next.js` project and run the development server.
-
-   `yarn dev`
-
-2. [Install cloudflared](https://developers.cloudflare.com/argo-tunnel/quickstart) on your machine. Then open a new terminal and navigate to the root of your Next.js project. Enter the following into the command line:
-
-   `cloudflared tunnel http://localhost:3000`
-
-3. Start the cloudflare tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file. Note that the url will change every time you restart the tunnel.
-
-   ```javascript
-   origin: ``;
-   ```
-
-4. Open the third terminal and deploy the override onto Outsmartly's edge server.
-
-   `yarn outsmartly:deploy`
-
-5. Navigate to the browser and enter your app url. You should see your override in the browser.
-
-## Part E: Deploying App with Production Origin
+1. [Sign up for Vercel](https://vercel.com/#get-started).
 
 1. Deploy your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
 
    !['Enter your OutSmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
 
-2. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as a value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. OutSmartly edge servers goes in front of the origin and executes your overrides.
+1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. OutSmartly edge servers goes in front of the origin and executes your overrides.
 
    ```javascript
    export default {
-     host: "portia.outsmartly.app",
+     host: "example.outsmartly.app",
      environments: [
        {
          name: "production",
@@ -286,7 +256,29 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-3. Enter your host url `portia.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
+## Part E: Make Your First Override Locally
+
+1. Go to the root of your `Next.js` project and run the development server.
+
+   `yarn dev`
+
+2. [Install cloudflared](https://developers.cloudflare.com/argo-tunnel/quickstart) on your machine. Then open a new terminal and navigate to the root of your Next.js project. Enter the following into the command line:
+
+   `cloudflared tunnel http://localhost:3000`
+
+3. Start the cloudflare tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file. Note that the url will change every time you restart the tunnel.
+
+   ```javascript
+   origin: `https://outsmartly-override-example.vercel.app`;
+   ```
+
+4. Open the third terminal and deploy the override onto Outsmartly's edge server.
+
+   `yarn outsmartly:deploy`
+
+5. Navigate to the browser and enter your app url. You should see your override in the browser.
+
+6. Enter your host url `example.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
 
    Congratulations. You have made your first override!
    <p align="left">
