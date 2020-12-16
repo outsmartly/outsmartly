@@ -78,7 +78,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-   `host:` The OutSmartly domain you have been assigned
+   `host:` The Outsmartly domain you have been assigned
 
    `name:` Env where you are deploying your app
 
@@ -221,9 +221,9 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
 1. Deploy your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
 
-   !['Enter your OutSmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
+   !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
 
-1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. OutSmartly edge servers goes in front of the origin and executes your overrides.
+1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
 
    ```javascript
    export default {
