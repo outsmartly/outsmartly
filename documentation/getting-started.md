@@ -20,7 +20,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
      "version": "0.1.0",
      "private": true,
      "scripts": {
-       "dev": "OUTSMARTLY_DEV=true next dev",
+       "dev": "next build && if [ '$VERCEL_ENV' == 'production' ]; then outsmartly deploy production; fi",
        "build": "next build",
        "start": "next start",
        "outsmartly:deploy": "outsmartly deploy production"
@@ -86,7 +86,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
 ## Part C: Creating Your First Override
 
-1. From the root of your project cd into the `pages/` directory and create `_document.js`. `_document.js` overrides the `_app.js` [which controls page initialization](https://nextjs.org/docs/advanced-features/custom-app).
+1. From the root of your project cd into the `pages/` directory and create `_document.js`. 
 
    a. Write a Outsmartly tag before `<NextScript />`.
 
@@ -182,7 +182,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
    }
    ```
 
-3. Go into your Outsmartly config located and create your personalization. In this example, you are going to change the headline prop value from `Welcome Humans!` to `I have made another change. 🤯🤖`.
+3. Go into your Outsmartly config located at the root of your directory and create your personalization. In this example, you are going to change the headline prop value from `Welcome Humans!` to `I have made another change. 🤯🤖`.
 
    ```javascript
    export default {
@@ -217,9 +217,15 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
 ## Part D: Deploying App with Production Origin
 
+1. [Get on Outsmartly's waiting list](https://www.outsmartly.com/signup), and you will be provided with `host` url. In this example the `host` url is example.outsmartly.app.
+
 1. [Sign up for Vercel](https://vercel.com/#get-started).
 
-1. Deploy your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
+2. Create your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
+`name: OUTSMARTLY_TOKEN value: 404e45a6-83fc-4b93-b1bk-437671222hb8`
+
+  Step A Go Settings/Environmental Variables from Vercel's home page
+  !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1608394503/Screen_Shot_2020-12-19_at_5.08.03_PM_vyplhj.png)
 
    !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
 
@@ -256,7 +262,15 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-## Part E: Make Your First Override Locally
+4. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
+
+Congratulations. You have made your first override!
+<p align="left">
+  <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
+</p>
+
+
+## Bonus: Make Your First Override Locally
 
 1. Go to the root of your `Next.js` project and run the development server.
 
@@ -280,7 +294,3 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
 6. Enter your host url `example.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
 
-   Congratulations. You have made your first override!
-   <p align="left">
-     <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
-   </p>
