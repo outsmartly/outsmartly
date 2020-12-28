@@ -78,15 +78,15 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-   `host:` The Outsmartly domain you have been assigned
+   `host:` Put your Outsmartly assigned domain here. Don't have one? Get on [Outsmartly's beta testing waiting list](https://www.outsmartly.com/signup)! 
 
-   `name:` Env where you are deploying your app
+   `name:` Env where you are deploying your app. Most common values are `Production` and `Staging`. 
 
-   `origin:` Where the edge will point to and make requests
+   `origin:` Where the edge will make requests to. Also where your html is stored. For example, `html://landing.vercel.app`. 
 
 ## Part C: Creating Your First Override
 
-1. From the root of your project cd into the `pages/` directory and create `_document.js`. 
+1. From the root of your project cd into the `pages/` directory and create `_document.js`.
 
    a. Write a Outsmartly tag before `<NextScript />`.
 
@@ -112,7 +112,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
 2. Enter the following code to the index file.
 
    a. Add the `// @outsmartly` comment before the `Home` function
-   b. On the bottom of the file write a server-side function and return the prop with the headline value of `Welcome Humans`
+   b. On the bottom of the file write a server-side function and return the prop with the headline value of `Welcome Humans`.
 
    ```jsx
    import { useState } from "react";
@@ -189,13 +189,13 @@ Below are the instructions you will need to get up and running with Outsmartly.
      host: "example.outsmartly.app",
      environments: [
        {
-         name: "production",
-         origin: "",
+         name: "production", 
+         origin: "", 
        },
      ],
      routes: [
        {
-         path: "/",
+         path: "/", 
          overrides: [
            {
              name: "Landing Page Title",
@@ -214,6 +214,16 @@ Below are the instructions you will need to get up and running with Outsmartly.
      ],
    };
    ```
+   `path:` Route handler. For example, `/user/:id`. 
+
+   `name:` Human-readable label of the override. 
+
+   `component:` Contains the prop that will be overridden at the edge. 
+
+   `propOverrides:` A list of property paths that you will override in the compute function. 
+
+   `compute:` An asynchronous function that executes the logic onto your override.  
+
 
 ## Part D: Deploying App with Production Origin
 
@@ -236,8 +246,8 @@ Below are the instructions you will need to get up and running with Outsmartly.
      host: "example.outsmartly.app",
      environments: [
        {
-         name: "production",
-         origin: "https://outsmartly-override-example.vercel.app",
+         name: "production", 
+         origin: "https://outsmartly-override-example.vercel.app", 
        },
      ],
      routes: [
@@ -269,7 +279,6 @@ Congratulations. You have made your first override!
   <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
 </p>
 
-
 ## Bonus: Make Your First Override Locally
 
 1. Go to the root of your `Next.js` project and run the development server.
@@ -293,4 +302,3 @@ Congratulations. You have made your first override!
 5. Navigate to the browser and enter your app url. You should see your override in the browser.
 
 6. Enter your host url `example.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
-
