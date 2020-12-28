@@ -12,7 +12,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
    `yarn add --dev @outsmartly/next-plugin-outsmartly`
 
-3. Open `package.json` in the root directory. In the scripts object add `OUTSMARTLY_DEV=true` as a value of `dev`, and enter `outsmartly:deploy` script.
+3. Open `package.json` in the root directory. In the scripts object add `OUTSMARTLY_DEV=true` as a value of `dev`, and type `"outsmartly:deploy": "outsmartly deploy production"` in `scripts`.
 
    ```json
    {
@@ -20,8 +20,8 @@ Below are the instructions you will need to get up and running with Outsmartly.
      "version": "0.1.0",
      "private": true,
      "scripts": {
-       "dev": "next build && if [ '$VERCEL_ENV' == 'production' ]; then outsmartly deploy production; fi",
-       "build": "next build",
+       "dev": "OUTSMARTLY_DEV=true next dev",
+       "build": "next build && if [ '$VERCEL_ENV' == 'production' ]; then outsmartly deploy production; fi",
        "start": "next start",
        "outsmartly:deploy": "outsmartly deploy production"
      },
@@ -35,6 +35,8 @@ Below are the instructions you will need to get up and running with Outsmartly.
      }
    }
    ```
+
+   When you deploy to production on Vercel, you are also deploying your override.
 
 ## Part B: Setting up Next.js and Outsmartly Config File
 
@@ -78,11 +80,11 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-   `host:` Put your Outsmartly assigned domain here. Don't have one? Get on [Outsmartly's beta testing waiting list](https://www.outsmartly.com/signup)! 
+   `host:` Put your Outsmartly assigned domain here. Don't have one? Get on [Outsmartly's Developer Waitlist](https://www.outsmartly.com/signup)! 
 
-   `name:` Env where you are deploying your app. Most common values are `Production` and `Staging`. 
+   `name:` Env where you are deploying your app. Most common values are `production` and `staging`. 
 
-   `origin:` Where the edge will make requests to. Also where your html is stored. For example, `html://landing.vercel.app`. 
+   `origin:` Where the edge will make requests to. Also where your html is stored. For example, `https://landing.vercel.app`. 
 
 ## Part C: Creating Your First Override
 
@@ -229,17 +231,21 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
 1. [Get on Outsmartly's waiting list](https://www.outsmartly.com/signup), and you will be provided with `host` url. In this example the `host` url is example.outsmartly.app.
 
-1. [Sign up for Vercel](https://vercel.com/#get-started).
+2. [Sign up for Vercel](https://vercel.com/#get-started).
 
-2. Create your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
-`name: OUTSMARTLY_TOKEN value: 404e45a6-83fc-4b93-b1bk-437671222hb8`
+3. Create your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
+`name: OUTSMARTLY_TOKEN value: ******-****-****-*****-*****`
 
-  Step A Go Settings/Environmental Variables from Vercel's home page
-  !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1608394503/Screen_Shot_2020-12-19_at_5.08.03_PM_vyplhj.png)
+   Go Settings/Environmental Variables from Vercel's homepage
 
+   Step A.
    !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
 
-1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
+   Step B.
+   !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1609187629/Screen_Shot_2020-12-28_at_9.16.16_PM_kbdd7b.png) 
+
+
+4. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
 
    ```javascript
    export default {
@@ -272,9 +278,9 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-4. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
+5. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
 
-Congratulations. You have made your first override!
+Congratulations. Check out your override on `example.outsmartly.app`!
 <p align="left">
   <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
 </p>
@@ -289,7 +295,7 @@ Congratulations. You have made your first override!
 
    `cloudflared tunnel http://localhost:3000`
 
-3. Start the cloudflare tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file. Note that the url will change every time you restart the tunnel.
+3. Start the cloudflared tunnel. Take the url in the output and put it in `origin` found in your Outsmartly config file. Note that the url will change every time you restart the tunnel.
 
    ```javascript
    origin: `https://outsmartly-override-example.vercel.app`;
@@ -299,6 +305,4 @@ Congratulations. You have made your first override!
 
    `yarn outsmartly:deploy`
 
-5. Navigate to the browser and enter your app url. You should see your override in the browser.
-
-6. Enter your host url `example.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
+5. Enter your host url `example.outsmartly.app`. You should see your override "I have made another change. 🤖🤯" in the browser.
