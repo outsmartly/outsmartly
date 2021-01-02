@@ -240,6 +240,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
    Step A.
    !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
+   
 
    Step B.
    !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1609187629/Screen_Shot_2020-12-28_at_9.16.16_PM_kbdd7b.png) 
