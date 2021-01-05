@@ -250,11 +250,11 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
     Step C.
 
-    ![](https://res.cloudinary.com/dmghm3eu4/image/upload/v1609882769/Outsmartly/Screen_Shot_2021-01-05_at_12.45.48_AM_rctlss.png)
+    ![](https://res.cloudinary.com/dmghm3eu4/image/upload/v1609884431/Outsmartly/Screen_Shot_2021-01-05_at_11.06.38_PM_gqiusq.png)
 
     Be sure to check the "Automatically expose System Environment Variables" box so that Outsmartly will be able to deploy your production app onto the edge.
 
-4. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
+1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
 
    ```javascript
    export default {
@@ -287,7 +287,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
    };
    ```
 
-5. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
+2. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
 
 Congratulations. Check out your override on `example.outsmartly.app`!
 <p align="left">
