@@ -1,5 +1,7 @@
 # Visitor Request Reference Guide
 
+When you're using Outsmartly, you have interacting with the event object. The event object has a visitor attribute, which contains information about the users who make a request to your page. Below are the visitor properties that you can access.
+
 * city `string` 
   * City of incoming request, e.g. "San Juan".
 
@@ -36,7 +38,6 @@
 * timezone `string`
   * Timezone of incoming request, e.g. "America/Chicago".
 
-### TODO: weather is not included and this reference guide needs a short introductioon
 
 
 
