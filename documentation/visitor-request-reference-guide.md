@@ -1,6 +1,6 @@
 # Visitor Request Reference Guide
 
-When you're using Outsmartly, you have interacting with the event object. The event object has a visitor attribute, which contains properties about the users who make a request to your page. Below are the visitor properties that you can access:
+The event object provided to your override's `compute(event)` function has a `visitor` attribute which contains properties about the user who made the request to your page. Below are the visitor properties that you can access:
 
 * city `string` 
   * City of incoming request, e.g. "San Juan".
