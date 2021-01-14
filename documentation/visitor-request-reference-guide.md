@@ -37,12 +37,3 @@ When you're using Outsmartly, you have interacting with the event object. The ev
 
 * timezone `string`
   * Timezone of incoming request, e.g. "America/Chicago".
-
-
-
-
-
-
-
-
-
