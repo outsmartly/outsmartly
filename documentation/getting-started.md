@@ -21,7 +21,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
      "private": true,
      "scripts": {
        "dev": "OUTSMARTLY_DEV=true next dev",
-       "build": "next build && if [ '$VERCEL_ENV' == 'production' ]; then outsmartly deploy production; fi",
+       "build": "next build && if [ \"$VERCEL_ENV\" == 'production' ]; then outsmartly deploy production; fi",
        "start": "next start",
        "outsmartly:deploy": "outsmartly deploy production"
      },
