@@ -11,7 +11,7 @@ const ESCAPE_LOOKUP: { [match: string]: string } = {
 
 const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
 
-export function htmlEscapeJsonString(obj: any): string {
+export function htmlSafeJSONStringify(obj: any): string {
   const str = JSON.stringify(obj);
   return str.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }

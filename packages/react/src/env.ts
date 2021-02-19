@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { htmlEscapeJsonString } from './htmlEscapeJsonString';
+import { htmlSafeJSONStringify } from './htmlSafeJSONStringify';
 
 export const _outsmartly_dev_mode =
   !!process.env.OUTSMARTLY_DEV || !!process.env.NEXT_PUBLIC_OUTSMARTLY_DEV;
@@ -11,10 +11,8 @@ export const _outsmartly_dev_mode =
 export const _outsmartly_enabled =
   process.env.NODE_ENV === 'production' || _outsmartly_dev_mode;
 
-// This intentionally returns 'null' instead of 'false' because in some
-// cases 'false' would still be rendered, e.g. JSX attributes
 export const _outsmartly_emit_markers =
-  (_outsmartly_enabled && typeof window !== 'object') || null;
+  _outsmartly_enabled && (typeof window !== 'object' || _outsmartly_dev_mode);
 
 // TODO(jayphelps): I think this is how we'll do it when we have a
 // local dev mode that doesn't require a tunnel.
@@ -28,11 +26,15 @@ export function _outsmartly_serialize_args(
   scope: string,
   args: unknown[],
 ): ReactNode {
+  if (!_outsmartly_emit_markers) {
+    return null;
+  }
+
   return React.createElement('script', {
     type: 'application/json',
     'data-outsmartly-component': scope,
     dangerouslySetInnerHTML: {
-      __html: htmlEscapeJsonString(args),
+      __html: htmlSafeJSONStringify(args),
     },
   });
 }

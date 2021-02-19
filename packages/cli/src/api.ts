@@ -52,14 +52,15 @@ export async function apiFetch<R>(
     },
   });
 
+  const text = await resp.text();
   let json;
 
   try {
-    json = await resp.json<APIResponseBody<R>>();
+    json = JSON.parse(text) as APIResponseBody<R>;
   } catch (e) {
-    throw new APIError(resp, {
-      errors: [e.message],
-    });
+    throw new Error(
+      `API request to ${url} failed. Malformed response from server. ${e.message}\n HTTP Status: ${resp.status}\n\n${text}`,
+    );
   }
 
   if (!resp.ok || json.success === false) {

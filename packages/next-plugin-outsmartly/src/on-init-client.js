@@ -12,14 +12,12 @@ export default function initClient({ router }) {
   }
 
   const routerPrototype = router.constructor.prototype;
-  const pageLoaderPrototype = router.pageLoader.constructor.prototype;
-  const { prefetch } = routerPrototype;
-  const { loadPage } = pageLoaderPrototype;
+  const { prefetch, getRouteInfo } = routerPrototype;
   let isActivelyRouting = false;
 
   routerPrototype.prefetch = async function (pathname) {
     const [outsmartly, next] = await Promise.allSettled([
-      preloadOverridesForPathname(pathname),
+      preloadOverridesForPathname(pathname, { cache: true }),
       prefetch.apply(this, arguments),
     ]);
 
@@ -34,17 +32,19 @@ export default function initClient({ router }) {
     return next.value;
   };
 
-  pageLoaderPrototype.loadPage = async function (pathname) {
+  routerPrototype.getRouteInfo = async function (route, pathname, query, as) {
     if (!isActivelyRouting) {
       console.error(
         'Outsmartly internal bug: page loading while not in routing state.',
       );
-      return loadPage.apply(this, arguments);
+      return getRouteInfo.apply(this, arguments);
     }
 
     const [outsmartly, next] = await Promise.allSettled([
-      loadOverridesForPathname(pathname),
-      loadPage.apply(this, arguments),
+      // TODO(jayphelps): 'query' has the query params we should be adding
+      // but it is an object so we need to convert it.
+      loadOverridesForPathname(as, { cache: true }),
+      getRouteInfo.apply(this, arguments),
     ]);
 
     if (outsmartly.status === 'rejected') {

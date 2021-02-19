@@ -17,8 +17,17 @@
     "node": ">=15",
     "npm": ">=7"
   },
-  "dependencies": {},
+  "workspaces": [
+    "./packages/*"
+  ],
+  "scripts": {
+    "build": "ultra --recursive build",
+    "test": "ultra --recursive test",
+    "syncpack": "syncpack fix-mismatches"
+  },
   "devDependencies": {
-    "prettier": "2.2.1"
+    "@jayphelps/jay-scripts": "^0.0.50",
+    "prettier": "2.2.1",
+    "syncpack": "^5.6.10"
   }
 }

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { _outsmartly_dev_mode, _outsmartly_enabled } from './env';
+import { htmlSafeJSONStringify } from './htmlSafeJSONStringify';
 import { getCurrentOverrides } from './overridesByPathname';
 
 export function OutsmartlyScript() {
@@ -10,7 +11,7 @@ export function OutsmartlyScript() {
         id: '__OUTSMARTLY_DATA__',
         type: 'application/json',
         dangerouslySetInnerHTML: {
-          __html: JSON.stringify(config.data),
+          __html: htmlSafeJSONStringify(config.data),
         },
       });
     }

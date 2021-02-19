@@ -44,17 +44,17 @@ export function getCurrentOverrides() {
   return getOverridesByPathname(currentPathname);
 }
 
-function reportLogs(logs: LogMessage[]): void {
+function reportLogs(logs: LogMessage[], pathname: string): void {
   if (!logs || logs.length === 0) {
     return;
   }
 
   console.group(
-    `%c(${logs.length}) Outsmartly Edge logs`,
+    `%c(${logs.length}) Outsmartly Edge logs for path ${pathname}`,
     'font-size: 12px; font-weight: normal;',
   );
   for (const message of logs) {
-    const { type = 'log', originator, args = [], title } = message;
+    const { type = 'log', originator, args = [], title = '' } = message;
     const post = originator ? ` ${originator.toUpperCase()}` : '';
     const pre = `%c[Outsmartly${post}] ${title}:`;
 
@@ -96,7 +96,7 @@ function setOverridesForPathname(data: OutsmartlyScriptData, pathname: string) {
   };
 
   try {
-    reportLogs(data.logs);
+    reportLogs(data.logs, pathname);
   } catch (e) {
     console.error(e);
   }
@@ -119,16 +119,21 @@ export function rehydrateOverridesForPathname(pathname: string): void {
   return;
 }
 
+export interface OverrideLoadOptions {
+  cache?: boolean;
+  host?: string;
+}
+
 export function loadOverridesForPathname(
   pathname: string,
-  host?: string,
+  options: OverrideLoadOptions,
 ): Promise<void> {
-  return preloadOverridesForPathname(pathname, host);
+  return preloadOverridesForPathname(pathname, options);
 }
 
 export function preloadOverridesForPathname(
   pathname: string,
-  host?: string,
+  { cache = false, host }: OverrideLoadOptions,
 ): Promise<void> {
   if (!_outsmartly_enabled) {
     return Promise.resolve();
@@ -138,15 +143,17 @@ export function preloadOverridesForPathname(
     currentHost = host;
   }
 
-  const existing = getOverridesByPathname(pathname);
-  if (existing) {
-    // We don't want concurrent requests that creates a race condition
-    // for which one updates last.
-    if (existing.isLoading) {
-      return existing.suspensePromise;
-      // We don't currently update overrides once they've been visited.
-    } else {
-      return Promise.resolve();
+  if (cache) {
+    const existing = getOverridesByPathname(pathname);
+    if (existing) {
+      // We don't want concurrent requests that creates a race condition
+      // for which one updates last.
+      if (existing.isLoading) {
+        return existing.suspensePromise;
+        // We don't currently update overrides once they've been visited.
+      } else {
+        return Promise.resolve();
+      }
     }
   }
 

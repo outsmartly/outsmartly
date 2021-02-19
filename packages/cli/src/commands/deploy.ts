@@ -14,8 +14,8 @@ import {
 import rollupCommonJs from '@rollup/plugin-commonjs';
 import rollupJson from '@rollup/plugin-json';
 import rollupNodeResolve from '@rollup/plugin-node-resolve';
-import rollupVirtual from '@rollup/plugin-virtual';
-import rollupReplace from '@rollup/plugin-replace';
+import { babel as rollupBabel } from '@rollup/plugin-babel';
+import rollupInjectProcessEnv from 'rollup-plugin-inject-process-env';
 import chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import cliSpinners from 'cli-spinners';
@@ -44,6 +44,13 @@ async function rollupOutsmartlyConfigFile(
     cache,
     onwarn(warning, _warn) {
       switch (warning.code) {
+        // Swallow these warnings because they happen frequently in real code.
+        // e.g. it seems to happen for any code that deals with Next.js router
+        // like using <Link>
+        case 'CIRCULAR_DEPENDENCY':
+        case 'THIS_IS_UNDEFINED':
+          return;
+
         case 'NON_EXISTENT_EXPORT':
           handleRollupError(warning, true);
           return;
@@ -58,12 +65,28 @@ async function rollupOutsmartlyConfigFile(
       handleRollupError(warning);
     },
     plugins: [
+      rollupBabel({
+        babelHelpers: 'bundled',
+        babelrc: false,
+        presets: ['@babel/preset-react', '@babel/preset-typescript'],
+        plugins: ['@babel/plugin-proposal-class-properties'],
+        include: '**',
+        compact: false,
+      }),
       rollupNodeResolve({
         browser: true,
         preferBuiltins: false,
       }),
-      rollupCommonJs(),
+      rollupCommonJs({
+        dynamicRequireTargets: [
+          'node_modules/enquire.js/*',
+          //'node_modules/gatsby/cache-dir/public-page-renderer*',
+        ],
+      }),
       rollupJson(),
+      rollupInjectProcessEnv({
+        NODE_ENV: 'production',
+      }),
     ],
   });
 
@@ -72,7 +95,7 @@ async function rollupOutsmartlyConfigFile(
     exports: 'named',
     // This might be needed later, so keep it around since it took me a while to
     // figure out how to emit __esModule
-    esModule: false,
+    //esModule: false,
     sourcemap: true,
   });
 
@@ -213,6 +236,8 @@ export default class Deploy extends Command {
       this.watcher!.add(module.id);
     }
 
+    // This runs over left-over files that were previously needing
+    // to be watched but no longer are.
     for (const filePath of prevWatchedFiles) {
       this.watcher!.unwatch(filePath);
     }
@@ -245,6 +270,9 @@ export default class Deploy extends Command {
             throw new Error(`Malformed path for module: ${firstLine}`);
           }
           const originalRelativePath = originalRelativePathComment[1];
+          if (originalRelativePath.startsWith('node_modules/')) {
+            continue;
+          }
           const originalModuleContent = content.slice(indexOfFirstNewline + 1);
           vfsForRollup[originalRelativePath] = originalModuleContent;
         }
@@ -265,6 +293,7 @@ export default class Deploy extends Command {
             0,
             filename.lastIndexOf('.'),
           );
+
           input[filenameWithOutExt] = filename;
           vfsForRollup[virtualFilePath] = moduleThunkRaw;
           // No need to send this to the server now as the vfs
@@ -284,6 +313,14 @@ export default class Deploy extends Command {
         input,
         external: ['react'],
         plugins: [
+          rollupBabel({
+            babelHelpers: 'bundled',
+            babelrc: false,
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: ['@babel/plugin-proposal-class-properties'],
+            include: '**',
+            compact: false,
+          }),
           {
             name: 'custom-outsmartly-virtual',
             resolveId(id, importer) {
@@ -292,18 +329,31 @@ export default class Deploy extends Command {
               }
 
               if (id.match(/^[/.]/) && importer) {
-                let resolved = path.join(path.dirname(importer), id);
+                const parts = path.parse(id);
+                let resolved = path.relative(
+                  process.cwd(),
+                  path.resolve(path.dirname(importer), id),
+                );
+                //let resolved = path.join(path.dirname(importer), id);
 
                 if (resolved in vfsForRollup) {
                   return resolved;
                 }
 
                 if (!resolved.endsWith('.js')) {
-                  resolved = resolved + '.js';
-                }
+                  if (resolved + '.js' in vfsForRollup) {
+                    return resolved + '.js';
+                  }
 
-                if (resolved in vfsForRollup) {
-                  return resolved;
+                  const indexNamed = path.join(resolved, 'index.js');
+                  if (indexNamed in vfsForRollup) {
+                    return indexNamed;
+                  }
+
+                  const doubleNamed = path.join(resolved, parts.name + '.js');
+                  if (doubleNamed in vfsForRollup) {
+                    return doubleNamed;
+                  }
                 }
               }
             },
@@ -312,16 +362,72 @@ export default class Deploy extends Command {
               return vfsForRollup[id];
             },
           },
-          rollupNodeResolve(),
-          rollupCommonJs(),
-          rollupReplace({
-            'process.env.NODE_ENV': JSON.stringify('production'),
+          {
+            name: 'custom-outsmartly-next.js-fix',
+            transform(code: string, id: string) {
+              // tl;dr import Next.js package files directly doesn't work
+              // as expected with Rollup. This fixes it.
+              // https://github.com/vercel/next.js/pull/19920
+              if (id.match(/\/node_modules\/next\/[a-zA-Z0-9]+\.js/)) {
+                return multiline`
+                  |${code}
+                  |exports.__esModule = true;
+                  |exports.default = module.exports.default;
+                `;
+              }
+              return code;
+            },
+          },
+          rollupCommonJs({
+            dynamicRequireTargets: [
+              'node_modules/enquire.js/*',
+              //'node_modules/gatsby/cache-dir/public-page-renderer*',
+            ],
+          }),
+          rollupJson(),
+          rollupNodeResolve({
+            browser: true,
+            preferBuiltins: false,
+          }),
+          rollupInjectProcessEnv({
+            NODE_ENV: 'production',
           }),
         ],
+        onwarn(warning, _warn) {
+          switch (warning.code) {
+            // Swallow these warnings because they happen frequently in real code.
+            // e.g. it seems to happen for any code that deals with Next.js router
+            // like using <Link>
+            case 'CIRCULAR_DEPENDENCY':
+            case 'THIS_IS_UNDEFINED':
+              return;
+
+            case 'NON_EXISTENT_EXPORT':
+              handleRollupError(warning, true);
+              return;
+
+            case 'UNRESOLVED_IMPORT':
+              warning.message = `'${warning.source}' is imported by ${warning.importer}, but could not be resolved`;
+              handleRollupError(warning, true);
+              return;
+          }
+
+          warning.message = `Rollup Bundler Warning: ${warning.message}`;
+          handleRollupError(warning);
+        },
       });
       const { output } = await bundle.generate({
         format: 'cjs',
         exports: 'named',
+        /* manualChunks(id, { getModuleInfo, getModuleIds }) {
+          const relativePath = path.relative(process.cwd(), id);
+          if (relativePath.startsWith('node_modules')) {
+            return relativePath
+              .replace(/^(node_modules\/[^/]+\/).+$/, '$1')
+              .replace(/-/gm, '--')
+              .replace(/\//gm, '-');
+          }
+        }, */
       });
 
       const vfs: { [key: string]: string } = {};
@@ -331,6 +437,7 @@ export default class Deploy extends Command {
           case 'chunk':
             vfs[entry.fileName] = entry.code;
             break;
+
           case 'asset': {
             if (typeof entry.source !== 'string') {
               throw new Error(multiline`
@@ -400,7 +507,7 @@ export default class Deploy extends Command {
       const { host, tmpDir = './.outsmartly/' } = module.exports.default;
 
       if (!host) {
-        throw `Missing 'host' field in ${configPath}`;
+        throw new Error(`Missing 'host' field in ${configPath}`);
       }
 
       const analysis = await this.bundleAnalysis(tmpDir);
@@ -488,7 +595,7 @@ export default class Deploy extends Command {
       this.spinner.fail('Deploying failed');
 
       if (e instanceof APIError) {
-        panic(e.json.errors.join('\n'));
+        panic(`Server Response: ${e.json.errors.join('\n')}`);
       }
 
       if (!e) {

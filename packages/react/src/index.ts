@@ -1,3 +1,5 @@
+/*globals window, location, self */
+
 // Public API
 export {
   setCurrentPathname,
@@ -8,12 +10,13 @@ export {
 export { OutsmartlyScript } from './OutsmartlyScript';
 
 // Private API
+export { _outsmartly_enabled } from './env';
 export {
-  _outsmartly_enabled,
-  _outsmartly_emit_markers,
-  _outsmartly_serialize_args,
-} from './env';
-export { _outsmartly_override } from './_outsmartly_override';
+  _outsmartly_override,
+  _outsmartly_mark_return,
+  _outsmartly_mark_attr,
+  _outsmartly_mark_child,
+} from './babel-output-helpers';
 
 // Initialization Client-side
 import { rehydrateOverridesForPathname } from './overridesByPathname';
@@ -21,7 +24,7 @@ import { rehydrateOverridesForPathname } from './overridesByPathname';
 // TODO(jayphelps): ideally this is done by plugins e.g. our Next plugin.
 // Doing it inside on-init-client.js does NOT work.
 if (typeof location === 'object' && typeof location.pathname === 'string') {
-  rehydrateOverridesForPathname(location.pathname);
+  rehydrateOverridesForPathname(location.pathname + location.search);
 }
 
 const root: any =
