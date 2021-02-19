@@ -54,9 +54,18 @@ function reportLogs(logs: LogMessage[], pathname: string): void {
     'font-size: 12px; font-weight: normal;',
   );
   for (const message of logs) {
-    const { type = 'log', originator, args = [], title = '' } = message;
-    const post = originator ? ` ${originator.toUpperCase()}` : '';
-    const pre = `%c[Outsmartly${post}] ${title}:`;
+    const { type = 'log', originator, title, args = [] } = message;
+    let pre = '%c[Outsmartly';
+
+    if (originator) {
+      pre += ` ${message.originator.toUpperCase()}`;
+    }
+
+    pre += ']';
+
+    if (title) {
+      pre += ` ${title}:`;
+    }
 
     switch (type) {
       case 'log': {
