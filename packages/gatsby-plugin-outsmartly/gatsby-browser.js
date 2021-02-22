@@ -36,5 +36,9 @@ exports.onPrefetchPathname = ({ pathname }) => {
 };
 
 exports.onPreRouteUpdate = ({ location, prevLocation }) => {
-  setCurrentPathname(location.pathname + location.search);
+  if (prevLocation) {
+    setCurrentPathname(prevLocation.pathname + prevLocation.search);
+  } else {
+    setCurrentPathname(location.pathname + location.search);
+  }
 };
