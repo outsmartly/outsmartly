@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/next-plugin-outsmartly",
-  "version": "0.0.59",
+  "version": "0.0.64",
   "description": "Next.js plugin for use with Outsmartly.",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
