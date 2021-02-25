@@ -1,17 +1,11 @@
-import { OverrideResult, JSONValue, _outsmartly_dev_mode } from './env';
+import { SafePropsValue, _outsmartly_dev_mode } from './env';
 import { getCurrentOverrides } from './overridesByPathname';
-import { mergeOverrides } from './mergeOverrides';
+import { mergeObjects } from './mergeObjects';
 
-interface OverrideListener {
-  (override: OverrideResult): void;
-}
-
-const overrideListeners: OverrideListener[] = [];
-export function onOverride(callback: OverrideListener): void {
-  overrideListeners.push(callback);
-}
-
-export function applyOverrides(args: JSONValue[], scope: string): JSONValue[] {
+export function applyOverrides(
+  args: SafePropsValue[],
+  scope: string,
+): SafePropsValue[] {
   const config = getCurrentOverrides();
   if (!config) {
     if (typeof window === 'object') {
@@ -35,23 +29,16 @@ export function applyOverrides(args: JSONValue[], scope: string): JSONValue[] {
     return args;
   }
 
-  const result = config.data?.overrides[scope];
-  if (!result) {
+  const propsRaw = config.data?.overrides[scope]?.propsRaw;
+  if (!propsRaw) {
     return args;
   }
 
-  // Devs can subscribe to know when overrides are applied for analytics.
-  for (const callback of overrideListeners) {
-    try {
-      callback(result);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
+  const overriddenProps = JSON.parse(propsRaw) as SafePropsValue;
   // When override React component's we only care about the
   // first argument, the props. The babel output is still an
   // array for future-proofing.
-  const overriddenProps = mergeOverrides(args[0], result.props);
-  return [overriddenProps] as JSONValue[];
+  mergeObjects(overriddenProps, args[0]);
+
+  return [overriddenProps];
 }

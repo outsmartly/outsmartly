@@ -44,11 +44,11 @@ export type JSONObject = { [member: string]: JSONValue };
 export type JSONArray = JSONValue[];
 export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
 
+export type SafePropsValue = JSONValue | ReactNode;
+
 export interface OverrideResult {
   name: string;
-  props: {
-    [key: string]: JSONValue;
-  };
+  propsRaw: string;
 }
 
 export type OverridesByScope = {

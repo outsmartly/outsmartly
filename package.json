@@ -24,7 +24,7 @@
     "build": "ultra --recursive build",
     "test": "ultra --recursive test",
     "syncpack": "syncpack fix-mismatches",
-    "lerna:publish": "lerna publish"
+    "lerna:publish": "lerna publish --exact"
   },
   "devDependencies": {
     "@jayphelps/jay-scripts": "^0.0.50",
