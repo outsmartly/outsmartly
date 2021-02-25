@@ -41,7 +41,12 @@ export function _outsmartly_mark_return(
     },
   });
 
-  return React.createElement(React.Fragment, null, argsScriptElement, value);
+  return React.createElement(
+    React.Fragment,
+    null,
+    argsScriptElement,
+    _outsmartly_mark_child(scope, '0', value),
+  );
 }
 
 export function _outsmartly_mark_attr(
