@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/react",
-  "version": "0.0.67",
+  "version": "0.0.68",
   "description": "Client-side SDK for React (or React-like libraries) and Outsmartly",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
