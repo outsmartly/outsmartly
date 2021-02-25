@@ -29,12 +29,12 @@ export function applyOverrides(
     return args;
   }
 
-  const propsRaw = config.data?.overrides[scope]?.propsRaw;
-  if (!propsRaw) {
+  const override = config.data?.overrides[scope];
+  if (!override) {
     return args;
   }
 
-  const overriddenProps = JSON.parse(propsRaw) as SafePropsValue;
+  const overriddenProps = JSON.parse(override).props as SafePropsValue;
   // When override React component's we only care about the
   // first argument, the props. The babel output is still an
   // array for future-proofing.

@@ -1,4 +1,4 @@
-import { OverridesByScope } from './env';
+import { StringifiedOverridesByScope } from './env';
 import { getRehydrationData } from './getRehydrationData';
 
 export interface LogMessage {
@@ -9,7 +9,7 @@ export interface LogMessage {
 }
 
 export interface OutsmartlyScriptData {
-  overrides: OverridesByScope;
+  overrides: StringifiedOverridesByScope;
   logs: LogMessage[];
   host?: string;
 }

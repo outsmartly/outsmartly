@@ -47,10 +47,9 @@ export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
 export type SafePropsValue = JSONValue | ReactNode;
 
 export interface OverrideResult {
-  name: string;
-  propsRaw: string;
+  props: string;
 }
 
-export type OverridesByScope = {
-  [key: string]: OverrideResult;
+export type StringifiedOverridesByScope = {
+  [key: string]: string;
 };
