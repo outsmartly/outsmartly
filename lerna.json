@@ -1,0 +1,10 @@
+{
+  "version": "0.0.65",
+  "npmClient": "npm",
+  "command": {
+    "publish": {
+      "message": "chore(release): publish"
+    }
+  },
+  "packages": ["packages/*"]
+}
