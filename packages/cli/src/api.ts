@@ -1,7 +1,8 @@
 import fetch, { Response, Headers, RequestInit } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 
-const origin = process.env.OUTSMARLY_API_ORIGIN ?? 'https://api.edgebailey.com';
+const origin =
+  process.env.OUTSMARTLY_API_ORIGIN ?? 'https://api.edgebailey.com';
 
 export class APIError extends Error {
   constructor(public response: Response, public json: any) {
