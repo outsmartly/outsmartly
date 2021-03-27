@@ -2,7 +2,7 @@
 
 The base event for all Outsmartly events; middleware, interceptors, and overrides.
 
-```ts
+```typescript
 interface OutsmartlyEvent extends Event {
   request: OutsmartlyRequest;
   url: URL;
@@ -16,3 +16,4 @@ interface OutsmartlyEvent extends Event {
   error(...args: any[]): void;
 }
 ```
+

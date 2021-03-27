@@ -1,6 +1,6 @@
 # OutsmartlyVisitor
 
-```ts
+```typescript
 interface OutsmartlyVisitor {
   /**
    * A unique, opaque, identifier for this particular visitor.
@@ -87,3 +87,4 @@ interface OutsmartlyVisitor {
   country: string;
 }
 ```
+

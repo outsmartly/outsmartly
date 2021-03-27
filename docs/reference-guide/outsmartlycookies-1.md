@@ -1,6 +1,6 @@
 # OutsmartlyCookies
 
-```ts
+```typescript
 interface OutsmartlyReadonlyCookies {
   has(key: string): boolean;
   get(key: string): string | undefined;
@@ -28,7 +28,7 @@ interface OutsmartlyReadonlyCookies {
 }
 ```
 
-```ts
+```typescript
 interface OutsmartlySetCookieOptions {
   expires?: string;
   maxAge?: number;
@@ -40,8 +40,9 @@ interface OutsmartlySetCookieOptions {
 }
 ```
 
-```ts
+```typescript
 interface OutsmartlyCookies extends OutsmartlyReadonlyCookies {
   set(key: string, value: string, options: OutsmartlySetCookieOptions = {}): this;
 }
 ```
+

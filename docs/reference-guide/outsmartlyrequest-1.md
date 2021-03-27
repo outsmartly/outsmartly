@@ -1,6 +1,6 @@
 # OutsmartlyRequest
 
-```ts
+```typescript
 type OutsmartlyRequestInfo = OutsmartlyRequest | string;
 
 interface OutsmartlyRequestInitOutsmartlyProperties {
@@ -19,3 +19,4 @@ interface OutsmartlyRequest extends Request {
   clone(): OutsmartlyRequest;
 }
 ```
+
