@@ -62,5 +62,7 @@ async function getSomeData(event) {
 }
 ```
 
-> Currently, regular `console.log()` calls—not `event.log()`—from within your overrides, are NOT logged to the browser.
+{% hint style="info" %}
+Regular `console.log()` calls—not `event.log()`—from within your overrides are NOT logged to the browser.
+{% endhint %}
 
