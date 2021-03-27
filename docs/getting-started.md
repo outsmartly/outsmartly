@@ -1,8 +1,12 @@
-# Installation
+# Quick Start (Next.js)
 
-Below are the instructions you will need to get up and running with Outsmartly.
+## Install
 
-## Part A: Installing Next.js App and Outsmartly Plugin
+```shell
+npm install --save-dev @outsmartly/next-plugin-outsmartly
+npx outsmartly init
+# Follow the prompts
+```
 
 1. Begin by installing Next.js.
 
@@ -54,7 +58,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
        },
        plugins: [
          {
-           name: "@outsmartly/next-plugin-outsmartly",
+           name: '@outsmartly/next-plugin-outsmartly',
          },
        ],
      };
@@ -69,22 +73,22 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
    ```javascript
    export default {
-     host: "example.outsmartly.app",
+     host: 'example.outsmartly.app',
      environments: [
        {
-         name: "production",
-         origin: "",
+         name: 'production',
+         origin: '',
        },
      ],
      routes: [],
    };
    ```
 
-   `host:` Put your Outsmartly assigned domain here. Don't have one? Get on [Outsmartly's Developer Waitlist](https://www.outsmartly.com/signup)! 
+   `host:` Put your Outsmartly assigned domain here. Don't have one? Get on [Outsmartly's Developer Waitlist](https://www.outsmartly.com/signup)!
 
-   `name:` Env where you are deploying your app. Most common values are `production` and `staging`. 
+   `name:` Env where you are deploying your app. Most common values are `production` and `staging`.
 
-   `origin:` Where the edge will make requests to. Also where your html is stored. For example, `https://landing.vercel.app`. 
+   `origin:` Where the edge will make requests to. Also where your html is stored. For example, `https://landing.vercel.app`.
 
 ## Part C: Creating Your First Override
 
@@ -93,8 +97,8 @@ Below are the instructions you will need to get up and running with Outsmartly.
    a. Write a Outsmartly tag before `<NextScript />`.
 
    ```javascript
-   import Document, { Html, Head, Main, NextScript } from "next/document";
-   import { OutsmartlyScript } from "@outsmartly/react";
+   import Document, { Html, Head, Main, NextScript } from 'next/document';
+   import { OutsmartlyScript } from '@outsmartly/react';
    export default class CustomDocument extends Document {
      render() {
        return (
@@ -117,9 +121,9 @@ Below are the instructions you will need to get up and running with Outsmartly.
    b. On the bottom of the file write a server-side function and return the prop with the headline value of `Welcome Humans`.
 
    ```jsx
-   import { useState } from "react";
-   import Head from "next/head";
-   import styles from "../styles/Home.module.css";
+   import { useState } from 'react';
+   import Head from 'next/head';
+   import styles from '../styles/Home.module.css';
 
    // @outsmartly
    export default function Home({ headline }) {
@@ -132,8 +136,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
          <main className={styles.main}>
            <h1 className={styles.title}>{headline}</h1>
            <p className={styles.description}>
-             Get started by editing{" "}
-             <code className={styles.code}>pages/index.js</code>
+             Get started by editing <code className={styles.code}>pages/index.js</code>
            </p>
            <div className={styles.grid}>
              <a href="https://nextjs.org/docs" className={styles.card}>
@@ -144,10 +147,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
                <h3>Learn &rarr;</h3>
                <p>Learn about Next.js in an interactive course with quizzes!</p>
              </a>
-             <a
-               href="https://github.com/vercel/next.js/tree/master/examples"
-               className={styles.card}
-             >
+             <a href="https://github.com/vercel/next.js/tree/master/examples" className={styles.card}>
                <h3>Examples &rarr;</h3>
                <p>Discover and deploy boilerplate example Next.js projects.</p>
              </a>
@@ -156,9 +156,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
                className={styles.card}
              >
                <h3>Deploy &rarr;</h3>
-               <p>
-                 Instantly deploy your Next.js site to a public URL with Vercel.
-               </p>
+               <p>Instantly deploy your Next.js site to a public URL with Vercel.</p>
              </a>
            </div>
          </main>
@@ -168,8 +166,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
              target="_blank"
              rel="noopener noreferrer"
            >
-             Powered by{" "}
-             <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
+             Powered by <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
            </a>
          </footer>
        </div>
@@ -178,7 +175,7 @@ Below are the instructions you will need to get up and running with Outsmartly.
    export async function getServerSideProps() {
      return {
        props: {
-         headline: "Welcome humans!",
+         headline: 'Welcome humans!',
        },
      };
    }
@@ -188,25 +185,25 @@ Below are the instructions you will need to get up and running with Outsmartly.
 
    ```javascript
    export default {
-     host: "example.outsmartly.app",
+     host: 'example.outsmartly.app',
      environments: [
        {
-         name: "production", 
-         origin: "", 
+         name: 'production',
+         origin: '',
        },
      ],
      routes: [
        {
-         path: "/", 
+         path: '/',
          overrides: [
            {
-             name: "Landing Page Title",
-             component: "Home",
-             propOverrides: ["headline"],
+             name: 'Landing Page Title',
+             component: 'Home',
+             propOverrides: ['headline'],
              async compute() {
                return {
                  props: {
-                   headline: "I have made another change. 🤯🤖",
+                   headline: 'I have made another change. 🤯🤖',
                  },
                };
              },
@@ -216,80 +213,79 @@ Below are the instructions you will need to get up and running with Outsmartly.
      ],
    };
    ```
-   `path:` Route handler. For example, `/user/:id`. 
 
-   `name:` Human-readable label of the override. 
+   `path:` Route handler. For example, `/user/:id`.
 
-   `component:` Contains the prop that will be overridden at the edge. 
+   `name:` Human-readable label of the override.
 
-   `propOverrides:` A list of property paths that you will override in the compute function. 
+   `component:` Contains the prop that will be overridden at the edge.
 
-   `compute:` An asynchronous function that executes the logic onto your override.  
+   `propOverrides:` A list of property paths that you will override in the compute function.
 
+   `compute:` An asynchronous function that executes the logic onto your override.
 
 ## Part D: Deploying App with Production Origin
 
-1. [Get on Outsmartly's waiting list](https://www.outsmartly.com/signup), and you will be provided with `host` url. In this example the `host` url is example.outsmartly.app.
+1.  [Get on Outsmartly's waiting list](https://www.outsmartly.com/signup), and you will be provided with `host` url. In this example the `host` url is example.outsmartly.app.
 
-2. [Sign up for Vercel](https://vercel.com/#get-started).
+2.  [Sign up for Vercel](https://vercel.com/#get-started).
 
-3. Create your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
-`name: OUTSMARTLY_TOKEN value: ******-****-****-*****-*****`
+3.  Create your [app to Vercel](https://vercel.com/#get-started). When you are in the process of deploying your app on Vercel, be sure to enter your Outsmartly token into the Vercel platform.
+    `name: OUTSMARTLY_TOKEN value: ******-****-****-*****-*****`
 
-   Go Settings/Environmental Variables from Vercel's homepage
+    Go Settings/Environmental Variables from Vercel's homepage
 
-   Step A.
+    Step A.
 
-   !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
-   
+    !['Enter your Outsmartly token here'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1607886268/env-variables_vxpemr.png)
 
-   Step B.
+    Step B.
 
-   !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1609187629/Screen_Shot_2020-12-28_at_9.16.16_PM_kbdd7b.png) 
+    !['Be sure to choose secret'](https://res.cloudinary.com/blockchain-side-hustle/image/upload/v1609187629/Screen_Shot_2020-12-28_at_9.16.16_PM_kbdd7b.png)
 
+        Step C.
 
-    Step C.
+        ![](https://res.cloudinary.com/dmghm3eu4/image/upload/v1609884431/Outsmartly/Screen_Shot_2021-01-05_at_11.06.38_PM_gqiusq.png)
 
-    ![](https://res.cloudinary.com/dmghm3eu4/image/upload/v1609884431/Outsmartly/Screen_Shot_2021-01-05_at_11.06.38_PM_gqiusq.png)
+        Be sure to check the "Automatically expose System Environment Variables" box so that Outsmartly will be able to deploy your production app onto the edge.
 
-    Be sure to check the "Automatically expose System Environment Variables" box so that Outsmartly will be able to deploy your production app onto the edge.
+4.  Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
 
-1. Take the url propagated by Vercel, open `outsmartly.config.js` and enter the url as the value of `origin`. In this example, the url is `https://outsmartly-override-example.vercel.app/`. Outsmartly edge servers goes in front of the origin and executes your overrides.
+    ```javascript
+    export default {
+      host: 'example.outsmartly.app',
+      environments: [
+        {
+          name: 'production',
+          origin: 'https://outsmartly-override-example.vercel.app',
+        },
+      ],
+      routes: [
+        {
+          path: '/',
+          overrides: [
+            {
+              name: 'Landing Page Title',
+              component: 'Home',
+              propOverrides: ['headline'],
+              async compute() {
+                return {
+                  props: {
+                    headline: 'I have made another change. 🤖🤯',
+                  },
+                };
+              },
+            },
+          ],
+        },
+      ],
+    };
+    ```
 
-   ```javascript
-   export default {
-     host: "example.outsmartly.app",
-     environments: [
-       {
-         name: "production", 
-         origin: "https://outsmartly-override-example.vercel.app", 
-       },
-     ],
-     routes: [
-       {
-         path: "/",
-         overrides: [
-           {
-             name: "Landing Page Title",
-             component: "Home",
-             propOverrides: ["headline"],
-             async compute() {
-               return {
-                 props: {
-                   headline: "I have made another change. 🤖🤯",
-                 },
-               };
-             },
-           },
-         ],
-       },
-     ],
-   };
-   ```
-
-2. After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
+5.  After you have entered the origin url `https://outsmartly-override-example.vercel.app` into your Outsmartly config file. Commit and push your changes to Github, which will set a webhook that will build and deploy your app.
 
 Congratulations. Check out your override on `example.outsmartly.app`!
+
 <p align="left">
   <img src="https://media.giphy.com/media/6EQIMBLbHXGeY/giphy.gif" />
 </p>
