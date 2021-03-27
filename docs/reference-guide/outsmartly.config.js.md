@@ -2,7 +2,7 @@
 
 ## Example
 
-```ts
+```typescript
 export default {
   name: 'my-example-website',
   environments: [
@@ -39,7 +39,7 @@ export default {
 
 ## Type Definition
 
-```ts
+```typescript
 interface OutsmartlyConfig {
   /**
    * The project name, for example, 'my-example-website'
@@ -142,3 +142,4 @@ type Middleware = (
   next: (request?: OutsmartlyRequest) => Promise<Response>,
 ) => PromiseOrValue<Response>;
 ```
+

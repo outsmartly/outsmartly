@@ -4,12 +4,13 @@
 
 ### Deploy
 
-```shell
+```text
 outsmartly deploy <ENVIRONMENT>
 ```
 
 or you can watch for file changes:
 
-```shell
+```text
 outsmartly deploy <ENVIRONMENT> --watch
 ```
+

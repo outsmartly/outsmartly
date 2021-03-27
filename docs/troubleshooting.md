@@ -4,7 +4,7 @@ Outsmartly offers a number of helpers that can greatly simplify the process of d
 
 ## Overrides
 
-Overrides are a core product offering of Outsmartly, allowing you to write code that will run across our edge networks and modify (or 'override') the default props that were originally passed into your React components during Static Site Generation or Server Side Rendering.
+Overrides are a core product offering of Outsmartly, allowing you to write code that will run across our edge networks and modify \(or 'override'\) the default props that were originally passed into your React components during Static Site Generation or Server Side Rendering.
 
 To aid with debugging Outsmartly ships logging from the edge to the Browser's console. There are two types of logs that can be viewed in the browser's console:
 
@@ -12,15 +12,15 @@ To aid with debugging Outsmartly ships logging from the edge to the Browser's co
 
 Outsmartly's logs will notify you of error that may have occured when running your code on our edge servers.
 
-![Debugging Logs Example](./images/troubleshooting/debugging-logs.jpg)
+![Debugging Logs Example](../.gitbook/assets/debugging-logs.jpg)
 
 ### 2. User generated logs from logging calls in your code.
 
-Users may also write explicit logging statements of their own. This is possible by using the `event.`log()` method located on the `event` object passed to your `getOverrideProps(event)`. These logs will also appear in the browser's console for convenient debugging.
+Users may also write explicit logging statements of their own. This is possible by using the `event.`log\(\)`method located on the`event`object passed to your`getOverrideProps\(event\)\`. These logs will also appear in the browser's console for convenient debugging.
 
 You can use these directly in an Override as follows:
 
-```ts
+```typescript
 overrides: [
   {
     component: 'ExampleComponent',
@@ -38,7 +38,7 @@ overrides: [
 
 It is a common pattern to break code up into function. When doing so you can pass the event object into any function that needs to make logging calls.
 
-```ts
+```typescript
 overrides: [
   {
     component: 'ExampleComponent',
@@ -53,7 +53,7 @@ overrides: [
 
 And then in the `getSomeData` function:
 
-```ts
+```typescript
 async function getSomeData(event) {
   //                       ^^^^^
   event.log('Hello Logger');
@@ -63,3 +63,4 @@ async function getSomeData(event) {
 ```
 
 > Currently, regular `console.log()` calls—not `event.log()`—from within your overrides, are NOT logged to the browser.
+
