@@ -1,8 +1,10 @@
 import { Command, flags } from '@oclif/command';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as vm from 'vm';
+import * as os from 'os';
 import chalk from 'chalk';
+import { prompt } from 'inquirer';
 import {
   rollup,
   OutputChunk,
@@ -166,15 +168,22 @@ export default class Deploy extends Command {
 
   static flags = {
     config: flags.string({
-      description: 'path to your Outsmartly config file',
+      description: 'Path to your Outsmartly config file.',
       helpValue: JSON.stringify('path/to/outsmartly.config.js'),
       default: './outsmartly.config.js',
     }),
     watch: flags.boolean({
-      description: 'redeploy when files change',
+      description: 'Redeploy when files change.',
       default: false,
     }),
-    help: flags.help({ char: 'h', description: 'show this help screen' }),
+    token: flags.string({
+      description:
+        'Access token, if provided, otherwise the CLI will look for OUTSMARTLY_TOKEN. If not defined, it will prompt you to provide one.',
+    }),
+    help: flags.help({
+      char: 'h',
+      description: 'Show this help screen.',
+    }),
   };
 
   static args = [
@@ -182,7 +191,7 @@ export default class Deploy extends Command {
       name: 'environment',
       required: true,
       description:
-        "environment you want to deploy to. Currently only supports 'production'",
+        "Environment you want to deploy to. Currently only supports 'production'.",
       options: ['production'],
     },
   ];
@@ -194,15 +203,57 @@ export default class Deploy extends Command {
   abortController = new AbortController();
   spinner = ora();
 
+  async findBearerToken(flags: any): string {
+    const { token: bearerTokenOverride } = flags;
+    const configFilePath = path.join(
+      os.homedir(),
+      '.config',
+      'outsmartly',
+      'config.json',
+    );
+    const config = fs.existsSync(configFilePath)
+      ? fs.readFileSync(configFilePath, 'utf-8')
+      : '';
+
+    let bearerToken = bearerTokenOverride ?? process.env.OUTSMARTLY_TOKEN;
+    if (!bearerToken) {
+      const answers = await prompt({
+        type: 'input',
+        name: 'bearerToken',
+        message:
+          "Paste your access token: (don't have one? visit https://www.outsmartly.com/signup)",
+        validate(bearerToken) {
+          if (!bearerToken || bearerToken.length < 36) {
+            throw "That doesn't seem to be a valid access token. If you're having trouble, contact support@outsmartly.com.";
+          }
+          return true;
+        },
+      });
+      bearerToken = answers.bearerToken as string;
+      try {
+        const config = {
+          cli: {
+            bearerToken,
+          },
+        };
+        const json = JSON.stringify(config, null, 2);
+        fs.outputFileSync(configFilePath, json);
+      } catch (e) {
+        console.error(
+          `Unable to write outsmartly configuration file to: ${configFilePath}`,
+        );
+        console.error(e);
+      }
+    }
+  }
+
   async run() {
     const { args, flags } = this.parse(Deploy);
-    const bearerToken = process.env.OUTSMARTLY_TOKEN;
-    if (!bearerToken) {
-      panic('Missing OUTSMARTLY_TOKEN environment variable');
-    }
-
     const { config: configPath, watch } = flags;
     const { environment } = args;
+
+    const bearerToken = await this.findBearerToken(flags);
+
     const configFullPath = path.resolve(process.cwd(), configPath);
 
     if (watch) {
@@ -219,7 +270,7 @@ export default class Deploy extends Command {
           return;
         }
 
-        await this.deploy(bearerToken, environment, configPath, watch);
+        await this.deploy(bearerToken!, environment, configPath, watch);
       });
     }
 

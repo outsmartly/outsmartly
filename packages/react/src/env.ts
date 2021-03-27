@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { OutsmartlyScriptData } from './getOverrideResults';
 import { htmlSafeJSONStringify } from './htmlSafeJSONStringify';
 
 export const _outsmartly_dev_mode =
@@ -53,3 +54,49 @@ export interface OverrideResult {
 export type StringifiedOverridesByScope = {
   [key: string]: string;
 };
+
+export type PageOverrides =
+  | {
+      isLoading: false;
+      pathname: string;
+      data?: OutsmartlyScriptData;
+    }
+  | {
+      isLoading: true;
+      pathname: string;
+      suspensePromise: Promise<void>;
+    };
+
+export const root: any =
+  typeof globalThis === 'object'
+    ? globalThis
+    : typeof self === 'object'
+    ? self
+    : typeof global === 'object'
+    ? global
+    : null;
+
+interface OutsmartlyInternalState {
+  overridesByPathname: { [key: string]: PageOverrides };
+  currentPathname: string;
+  hasRehydrated: boolean;
+  endpoints: {
+    overrides: string;
+  };
+}
+
+// It's possible there will be more than one copy of the SDK in the same app.
+// Sometimes this is bad, but there's also unavoidable cases, like in Gatsby v3:
+// https://github.com/gatsbyjs/gatsby/discussions/28138#discussioncomment-419052
+//
+// When this happens, we want to share state between all the copies to at least try
+// to have things "just work." If the multiple copies are actually different version,
+// this might cause things to behave in unexpected ways.
+export const state: OutsmartlyInternalState = (root.__OUTSMARTLY__ ??= {
+  overridesByPathname: Object.create(null),
+  currentPathname: typeof location === 'object' ? location.pathname : '',
+  endpoints: {
+    overrides: '/.outsmartly/overrides',
+  },
+  hasRehydrated: typeof window !== 'object',
+} as OutsmartlyInternalState);

@@ -1,6 +1,7 @@
 import { SafePropsValue, _outsmartly_dev_mode } from './env';
 import { getCurrentOverrides } from './overridesByPathname';
 import { mergeObjects } from './mergeObjects';
+import * as console from './console';
 
 export function applyOverrides(
   args: SafePropsValue[],
@@ -11,11 +12,11 @@ export function applyOverrides(
     if (typeof window === 'object') {
       if (_outsmartly_dev_mode) {
         console.warn(
-          `[Outsmartly SDK] missing entry for component ${scope}. This is only expected when OUTSMARTLY_DEV=true mode is enabled and you're viewing your site without the Outsmartly Edge in front of it.`,
+          `Missing entry for component ${scope}. This is only expected when OUTSMARTLY_DEV=true mode is enabled and you're viewing your site without the Outsmartly Edge in front of it.`,
         );
       } else {
         console.error(
-          `[Outsmartly SDK] missing entry for component ${scope}. Usually this means you're viewing the site without the Outsmartly Edge.`,
+          `Missing entry for component ${scope}. Usually this means you're viewing the site without the Outsmartly Edge.`,
         );
       }
     }
@@ -24,7 +25,7 @@ export function applyOverrides(
 
   if (config.isLoading) {
     console.error(
-      `[Outsmartly SDK] component ${scope} was rendered while its overrides were still loading.`,
+      `Component ${scope} was rendered while its overrides were still loading.`,
     );
     return args;
   }
