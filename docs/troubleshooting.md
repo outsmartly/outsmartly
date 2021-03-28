@@ -16,7 +16,7 @@ Outsmartly's logs will notify you of error that may have occurred when running y
 
 ### 2. User generated logs from logging calls in your code.
 
-Users may also write explicit logging statements of their own. This is possible by using the `event.`log\(\)`method located on the`event`object passed to your`getOverrideProps\(event\)\`. These logs will also appear in the browser's console for convenient debugging.
+Users may also write explicit logging statements of their own. This is possible by using the `event.log()` method located on the event object passed to your `getOverrideProps(event)` method of your Override that runs on the CDN edge servers. These logs will appear remotely in the browser's console for convenient debugging.
 
 You can use these directly in an Override as follows:
 
@@ -62,5 +62,7 @@ async function getSomeData(event) {
 }
 ```
 
-> Currently, regular `console.log()` calls—not `event.log()`—from within your overrides, are NOT logged to the browser.
+{% hint style="info" %}
+Regular `console.log()` calls—not `event.log()`—from within your overrides are NOT logged to the browser.
+{% endhint %}
 
