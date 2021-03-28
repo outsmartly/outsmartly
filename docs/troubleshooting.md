@@ -10,7 +10,7 @@ To aid with debugging Outsmartly ships logging from the edge to the Browser's co
 
 ### 1. Outsmartly default and error logs.
 
-Outsmartly's logs will notify you of error that may have occured when running your code on our edge servers.
+Outsmartly's logs will notify you of error that may have occurred when running your code on our edge servers.
 
 ![Debugging Logs Example](.gitbook/assets/debugging-logs.jpg)
 
@@ -62,7 +62,5 @@ async function getSomeData(event) {
 }
 ```
 
-{% hint style="info" %}
-Regular `console.log()` calls—not `event.log()`—from within your overrides are NOT logged to the browser.
-{% endhint %}
+> Currently, regular `console.log()` calls—not `event.log()`—from within your overrides, are NOT logged to the browser.
 
