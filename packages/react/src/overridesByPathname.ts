@@ -1,19 +1,9 @@
-import {
-  PageOverrides,
-  state,
-  _outsmartly_dev_mode,
-  _outsmartly_enabled,
-} from './env';
-import {
-  getOutsmartlyScriptData,
-  OutsmartlyScriptData,
-} from './getOverrideResults';
+import { PageOverrides, state, _outsmartly_dev_mode, _outsmartly_enabled } from './env';
+import { getOutsmartlyScriptData, OutsmartlyScriptData } from './getOverrideResults';
 import * as console from './console';
 import { reportEdgeLogs } from './reportEdgeLogs';
 
-export function getOverridesByPathname(
-  pathname: string,
-): PageOverrides | undefined {
+export function getOverridesByPathname(pathname: string): PageOverrides | undefined {
   if (!_outsmartly_enabled || !state.hasRehydrated) {
     return;
   }
@@ -55,9 +45,7 @@ export function rehydrateOverridesForPathname(pathname: string): void {
     // We don't throw an error because, while we know this code isn't strictly compatible anymore,
     // it might still work "good enough" in some situations and if there are exceptions that get thrown
     // because of unexpected data format changes we should be catching them then recovering when we can.
-    console.error(
-      'This version of the @outsmartly/react SDK is no longer supported. Please update to the latest.',
-    );
+    console.error('This version of the @outsmartly/react SDK is no longer supported. Please update to the latest.');
   }
 
   setOverridesForPathname(outsmartlyScriptData, pathname);
@@ -72,17 +60,11 @@ export interface OverrideLoadOptions {
   cache?: boolean;
 }
 
-export function loadOverridesForPathname(
-  pathname: string,
-  options: OverrideLoadOptions,
-): Promise<void> {
+export function loadOverridesForPathname(pathname: string, options: OverrideLoadOptions): Promise<void> {
   return preloadOverridesForPathname(pathname, options);
 }
 
-export function preloadOverridesForPathname(
-  pathname: string,
-  { cache = false }: OverrideLoadOptions,
-): Promise<void> {
+export function preloadOverridesForPathname(pathname: string, { cache = false }: OverrideLoadOptions): Promise<void> {
   if (!_outsmartly_enabled) {
     return Promise.resolve();
   }
@@ -102,12 +84,20 @@ export function preloadOverridesForPathname(
   }
 
   const suspensePromise = new Promise<void>(async (resolve, reject) => {
-    const endpoint = `${state.endpoints.overrides}?route=${encodeURIComponent(
-      pathname,
-    )}`;
+    // Usually it's relative, but it could also be configured to be absolute
+    const endpoint = state.endpoints.overrides.startsWith('/')
+      ? new URL(`${location.origin}${state.endpoints.overrides}`)
+      : new URL(state.endpoints.overrides);
+    // This way if there are already query params we won't
+    // blow them away when we add our own.
+    endpoint.searchParams.set('route', pathname);
+    // We temporarily need to set a version number because the backend
+    // wants to introduce breaking changes, but only once everyone has
+    // moved off the old version. So it's checking for ?v=2.
+    endpoint.searchParams.set('v', '2');
 
     try {
-      const resp = await fetch(endpoint);
+      const resp = await fetch(endpoint.href);
       const data: OutsmartlyScriptData = await resp.json();
 
       setOverridesForPathname(data, pathname);

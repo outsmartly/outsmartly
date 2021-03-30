@@ -1,5 +1,6 @@
 import { StringifiedOverridesByScope } from './env';
 import { getRehydrationData } from './getRehydrationData';
+import * as console from './console';
 
 export interface EdgeLogMessage {
   type: 'log' | 'warn' | 'error';
@@ -20,6 +21,7 @@ export interface OutsmartlyScriptData {
 export function getOutsmartlyScriptData(): OutsmartlyScriptData | null {
   const json = getRehydrationData();
   if (!json) {
+    console.error('No rehydration information found from Outsmartly <script id="__OUTSMARTLY_DATA__" type="application/json">');
     return null;
   }
 
