@@ -139,7 +139,7 @@ type PromiseOrValue<T> = Promise<T> | T;
 
 type Middleware = (
   event: OutsmartlyMiddlewareEvent,
-  next: (request?: OutsmartlyRequest) => Promise<Response>,
+  next: (request?: Request) => Promise<Response>,
 ) => PromiseOrValue<Response>;
 ```
 

@@ -11,6 +11,6 @@
   * [OutsmartlyEvent](reference-guide/outsmartlyevent.md)
   * [OutsmartlyOverrideEvent](reference-guide/outsmartlyoverrideevent.md)
   * [OutsmartlyMiddlewareEvent](reference-guide/outsmartlymiddlewareevent.md)
-  * [OutsmartlyInterceptEvent](reference-guide/outsmartlyinterceptevent.md)
+  * [OutsmartlyInterceptorEvent](reference-guide/outsmartlyinterceptorevent.md)
 * [Troubleshooting / Debugging](troubleshooting.md)
 

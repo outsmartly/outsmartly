@@ -10,13 +10,13 @@ To aid with debugging Outsmartly ships logging from the edge to the Browser's co
 
 ### 1. Outsmartly default and error logs.
 
-Outsmartly's logs will notify you of error that may have occured when running your code on our edge servers.
+Outsmartly's logs will notify you of error that may have occurred when running your code on our edge servers.
 
 ![Debugging Logs Example](.gitbook/assets/debugging-logs.jpg)
 
 ### 2. User generated logs from logging calls in your code.
 
-Users may also write explicit logging statements of their own. This is possible by using the `event.`log\(\)`method located on the`event`object passed to your`getOverrideProps\(event\)\`. These logs will also appear in the browser's console for convenient debugging.
+Users may also write explicit logging statements of their own. This is possible by using the `event.log()` method located on the event object passed to your `getOverrideProps(event)` method of your Override that runs on the CDN edge servers. These logs will appear remotely in the browser's console for convenient debugging.
 
 You can use these directly in an Override as follows:
 
