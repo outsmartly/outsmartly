@@ -6,6 +6,30 @@ import {
   loadOverridesForPathname,
 } from '@outsmartly/react';
 
+// Instead of relying on Promise.allSettled() or even Promise.all() we make a simple
+// one-off helper. Saves on bundle size since we don't need full spec compliance.
+function twoPromisesSettled(a, b) {
+  return new Promise((resolve) => {
+    const results = [];
+    const checkIfDone = () => {
+      if (results.length === 2) {
+        resolve(results);
+      }
+    };
+    const wait = (promise) => {
+      return promise
+        .then(
+          (value) => results.push({ status: 'fulfilled', value }),
+          (reason) => results.push({ status: 'rejected', reason }),
+        )
+        .then(checkIfDone);
+    };
+
+    wait(a);
+    wait(b);
+  });
+}
+
 export default function initClient({ router }) {
   if (!_outsmartly_enabled) {
     return;
@@ -16,10 +40,10 @@ export default function initClient({ router }) {
   let isActivelyRouting = false;
 
   routerPrototype.prefetch = async function (pathname) {
-    const [outsmartly, next] = await Promise.allSettled([
+    const [outsmartly, next] = await twoPromisesSettled(
       preloadOverridesForPathname(pathname, { cache: true }),
       prefetch.apply(this, arguments),
-    ]);
+    );
 
     if (outsmartly.status === 'rejected') {
       console.error(outsmartly.reason);
@@ -40,12 +64,12 @@ export default function initClient({ router }) {
       return getRouteInfo.apply(this, arguments);
     }
 
-    const [outsmartly, next] = await Promise.allSettled([
+    const [outsmartly, next] = await twoPromisesSettled(
       // TODO(jayphelps): 'query' has the query params we should be adding
       // but it is an object so we need to convert it.
       loadOverridesForPathname(as, { cache: true }),
       getRouteInfo.apply(this, arguments),
-    ]);
+    );
 
     if (outsmartly.status === 'rejected') {
       console.error(outsmartly.reason);
