@@ -46,7 +46,7 @@ export default function initClient({ router }) {
       // but it is an object so we need to convert it.
       loadOverridesForPathname(as, { cache: true }),
       getRouteInfo.apply(this, arguments),
-    ]);
+    );
 
     if (outsmartly.status === 'rejected') {
       console.error(outsmartly.reason);
