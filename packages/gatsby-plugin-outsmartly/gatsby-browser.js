@@ -4,6 +4,30 @@ const {
   preloadOverridesForPathname,
 } = require('@outsmartly/react');
 
+// Instead of relying on Promise.allSettled() or even Promise.all() we make a simple
+// one-off helper. Saves on bundle size since we don't need full spec compliance.
+function twoPromisesSettled(a, b) {
+  return new Promise((resolve) => {
+    const results = [];
+    const checkIfDone = () => {
+      if (results.length === 2) {
+        resolve(results);
+      }
+    };
+    const wait = (promise) => {
+      return promise
+        .then(
+          (value) => results.push({ status: 'fulfilled', value }),
+          (reason) => results.push({ status: 'rejected', reason }),
+        )
+        .then(checkIfDone);
+    };
+
+    wait(a);
+    wait(b);
+  });
+}
+
 exports.onClientEntry = (_, pluginOptions) => {
   // This isn't well documented, but it is still specifically mentioned here:
   //   https://www.gatsbyjs.com/docs/how-to/testing/unit-testing/
@@ -21,10 +45,10 @@ exports.onClientEntry = (_, pluginOptions) => {
 
   window.___loader.loadPage = async (rawPath, ...rest) => {
     // TODO: does rawPath contain the location.search query?
-    const [result] = await Promise.allSettled([
+    const [result] = await twoPromisesSettled(
       loadPage(rawPath, ...rest),
       loadOverridesForPathname(rawPath, { cache: true }),
-    ]);
+    );
 
     return result.value;
   };
