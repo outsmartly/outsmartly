@@ -10,6 +10,7 @@ export {
 export { OutsmartlyScript } from './OutsmartlyScript';
 
 // Private API
+export { _outsmartly_two_promises_settled } from './overridesByPathname';
 export { _outsmartly_enabled } from './env';
 export {
   _outsmartly_override,

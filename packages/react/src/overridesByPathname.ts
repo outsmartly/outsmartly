@@ -194,3 +194,46 @@ export function preloadOverridesForPathname(
 
   return suspensePromise;
 }
+
+type PromiseSettledResult =
+  | {
+      status: 'fulfilled';
+      value: unknown;
+    }
+  | {
+      status: 'rejected';
+      reason: unknown;
+    };
+
+type PromiseSettledResults = [PromiseSettledResult, PromiseSettledResult];
+
+// Instead of relying on Promise.allSettled() or even Promise.all() we make a simple
+// one-off helper. Saves on bundle size since we don't need full spec compliance.
+export function _outsmartly_two_promises_settled(
+  a: Promise<unknown>,
+  b: Promise<unknown>,
+): Promise<PromiseSettledResults> {
+  return new Promise((resolve) => {
+    const results = new Array(2) as PromiseSettledResults;
+    const checkIfDone = () => {
+      if (results[0] && results[1]) {
+        resolve(results);
+      }
+    };
+    const wait = (promise: Promise<unknown>, index: number) => {
+      return promise
+        .then(
+          (value) => {
+            results[index] = { status: 'fulfilled', value };
+          },
+          (reason) => {
+            results[index] = { status: 'rejected', reason };
+          },
+        )
+        .then(checkIfDone);
+    };
+
+    wait(a, 0);
+    wait(b, 1);
+  });
+}
