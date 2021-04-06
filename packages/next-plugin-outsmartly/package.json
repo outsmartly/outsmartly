@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/next-plugin-outsmartly",
-  "version": "0.0.70",
+  "version": "0.0.71",
   "description": "Next.js plugin for use with Outsmartly.",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "@outsmartly/babel-plugin-outsmartly-react": "0.0.19",
-    "@outsmartly/cli": "0.0.70",
-    "@outsmartly/react": "0.0.70"
+    "@outsmartly/cli": "0.0.71",
+    "@outsmartly/react": "0.0.71"
   },
   "nextjs": {
     "name": "Outsmartly SDK for Next.js",
