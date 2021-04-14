@@ -3,6 +3,7 @@
 * [Introduction](README.md)
 * [Quick Start \(Next.js\)](getting-started.md)
 * [Performance Best Practices / High Performance Checklist](performance-best-practices.md)
+* [Middleware](middleware.md)
 * [Reference Guide](reference-guide/README.md)
   * [outsmartly.config.js](reference-guide/outsmartly.config.js.md)
   * [OutsmartlyRequest](reference-guide/outsmartlyrequest.md)

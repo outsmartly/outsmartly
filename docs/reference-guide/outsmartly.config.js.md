@@ -134,12 +134,4 @@ interface OutsmartlyConfig {
     }>;
   }>;
 }
-
-type PromiseOrValue<T> = Promise<T> | T;
-
-type Middleware = (
-  event: OutsmartlyMiddlewareEvent,
-  next: (request?: Request) => Promise<Response>,
-) => PromiseOrValue<Response>;
 ```
-
