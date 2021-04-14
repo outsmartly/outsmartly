@@ -245,8 +245,9 @@ export default class Deploy extends Command {
 
   async bundleAnalysis(tmpDir: string): Promise<Analysis> {
     if (!fs.existsSync(tmpDir)) {
-      throw new Error(`Could not find tmpDir=${tmpDir}`);
+      return { components: {}, vfs: {} };
     }
+
     try {
       const input: { [key: string]: string } = {};
       const vfsForRollup: { [key: string]: string } = {};
