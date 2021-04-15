@@ -134,4 +134,6 @@ interface OutsmartlyConfig {
     }>;
   }>;
 }
+
+type PromiseOrValue<T> = Promise<T> | T;
 ```
