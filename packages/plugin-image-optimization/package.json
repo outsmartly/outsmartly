@@ -1,0 +1,21 @@
+{
+  "name": "@outsmartly/plugin-image-optimizations",
+  "version": "0.0.74",
+  "description": "Image optimization plugin for the Outsmartly Platform. Image resizing, HTTP/2 Push, and more.",
+  "author": "Outsmartly <support@outsmartly.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/outsmartly/outsmartly/",
+  "bugs": {
+    "url": "https://github.com/outsmartly/outsmartly/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/outsmartly/outsmartly.git",
+    "directory": "packages/plugin-image-optimization"
+  },
+  "main": "./src/index.js",
+  "scripts": {},
+  "dependencies": {
+    "regenerator-runtime": "*"
+  }
+}
