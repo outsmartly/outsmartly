@@ -53,12 +53,25 @@ export async function apiFetch<R>(
     },
   });
 
+  // If there's an error we'll want to show the text as-is
+  // so we're going to parse JSON ourselves.
   const text = await resp.text();
   let json;
 
   try {
     json = JSON.parse(text) as APIResponseBody<R>;
   } catch (e) {
+    // Thus far this only happens when Cloudflare itself is having issues in some form or another.
+    // In general, it's not a good sign since we should *always* get JSON even when there are errors
+    // as long as they were handled by the API server.
+    if (
+      text.trim().startsWith('<!DOCTYPE html>') &&
+      !process.env.OUTSMARTLY_INTERNAL_DEBUG
+    ) {
+      throw new Error(
+        `API request to ${url} failed. Malformed response from server. ${e.message}\n HTTP Status: ${resp.status}\n\n <UNEXPECTED_SERVER_RESPONSE_HTML>`,
+      );
+    }
     throw new Error(
       `API request to ${url} failed. Malformed response from server. ${e.message}\n HTTP Status: ${resp.status}\n\n${text}`,
     );

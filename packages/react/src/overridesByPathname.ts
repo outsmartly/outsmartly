@@ -1,155 +1,72 @@
-import { _outsmartly_dev_mode, _outsmartly_enabled } from './env';
-import {
-  getOutsmartlyScriptData,
-  OutsmartlyScriptData,
-  LogMessage,
-} from './getOverrideResults';
+import { PageOverrides, state, _outsmartly_dev_mode, _outsmartly_enabled } from './env';
+import { getOutsmartlyScriptData, OutsmartlyScriptData } from './getOverrideResults';
+import * as console from './console';
+import { reportEdgeLogs } from './reportEdgeLogs';
 
-type PageOverrides =
-  | {
-      isLoading: false;
-      pathname: string;
-      data?: OutsmartlyScriptData;
-    }
-  | {
-      isLoading: true;
-      pathname: string;
-      suspensePromise: Promise<void>;
-    };
-
-let hasRehydrated = typeof window !== 'object';
-let currentPathname = typeof location === 'object' ? location.pathname : '';
-let currentHost: string | undefined;
-
-export const overridesByPathname: {
-  [key: string]: PageOverrides;
-} = Object.create(null);
-
-export function getOverridesByPathname(
-  pathname: string,
-): PageOverrides | undefined {
-  if (!_outsmartly_enabled) {
+export function getOverridesByPathname(pathname: string): PageOverrides | undefined {
+  if (!_outsmartly_enabled || !state.hasRehydrated) {
     return;
   }
 
-  if (!hasRehydrated) {
-    throw new Error(
-      'Outsmartly has not been initialized client-side. rehydrateOverridesForPathname(location.pathname) must be called before any attempt to render.',
-    );
-  }
-  return overridesByPathname[pathname];
+  return state.overridesByPathname[pathname];
 }
 
 export function getCurrentOverrides() {
-  return getOverridesByPathname(currentPathname);
-}
-
-function reportLogs(logs: LogMessage[], pathname: string): void {
-  if (!logs || logs.length === 0) {
-    return;
-  }
-
-  console.group(
-    `%c(${logs.length}) Outsmartly Edge logs for path ${pathname}`,
-    'font-size: 12px; font-weight: normal;',
-  );
-  for (const message of logs) {
-    const { type = 'log', originator, title, args = [] } = message;
-    let pre = '%c[Outsmartly';
-
-    if (originator) {
-      pre += ` ${message.originator.toUpperCase()}`;
-    }
-
-    pre += ']';
-
-    if (title) {
-      pre += ` ${title}:`;
-    }
-
-    switch (type) {
-      case 'log': {
-        console.log(pre, 'margin-left: 10px; color: #999;', ...args);
-        break;
-      }
-
-      case 'warn': {
-        console.warn(pre, 'color: #999;', ...args);
-        break;
-      }
-
-      case 'error': {
-        console.error(pre, 'color: #999;', ...args);
-        break;
-      }
-
-      default:
-    }
-  }
-  console.groupEnd();
+  return getOverridesByPathname(state.currentPathname);
 }
 
 export function setCurrentPathname(pathname: string): void {
-  currentPathname = pathname;
+  state.currentPathname = pathname;
 }
 
 function setOverridesForPathname(data: OutsmartlyScriptData, pathname: string) {
-  if (!data.host) {
-    data.host = currentHost;
-  }
-
-  overridesByPathname[pathname] = {
+  state.overridesByPathname[pathname] = {
     pathname,
     data,
     isLoading: false,
   };
 
-  try {
-    reportLogs(data.logs, pathname);
-  } catch (e) {
-    console.error(e);
-  }
+  reportEdgeLogs(data.logs, pathname);
 }
 
+// This is specifically for the expected format of the data inside <script id="__OUTSMARTLY_DATA__">.
+// If this ever need to break in a backwards incompatible way, this allows us to at least tell the
+// developer in the console the current SDK version is no longer supported.
+const SCRIPT_DATA_FORMAT_VERSION = 1;
+
 export function rehydrateOverridesForPathname(pathname: string): void {
-  hasRehydrated = true;
   setCurrentPathname(pathname);
   const outsmartlyScriptData = getOutsmartlyScriptData();
-
   if (!outsmartlyScriptData) {
     return;
   }
 
-  // This might be undefined (e.g. when not in dev mode),
-  // but it's still safe to set it anyway.
-  currentHost = outsmartlyScriptData.host;
+  if (outsmartlyScriptData.minFormatVersion > SCRIPT_DATA_FORMAT_VERSION) {
+    // We don't throw an error because, while we know this code isn't strictly compatible anymore,
+    // it might still work "good enough" in some situations and if there are exceptions that get thrown
+    // because of unexpected data format changes we should be catching them then recovering when we can.
+    console.error('This version of the @outsmartly/react SDK is no longer supported. Please update to the latest.');
+  }
 
   setOverridesForPathname(outsmartlyScriptData, pathname);
+  // This allows the edge to change what endpoints are used for API calls, which allows us to direct it
+  // to different servers if needed, and gives us flexibility for backwards compatibility purposes.
+  Object.assign(state.endpoints, outsmartlyScriptData.endpoints);
+  state.hasRehydrated = true;
   return;
 }
 
 export interface OverrideLoadOptions {
   cache?: boolean;
-  host?: string;
 }
 
-export function loadOverridesForPathname(
-  pathname: string,
-  options: OverrideLoadOptions,
-): Promise<void> {
+export function loadOverridesForPathname(pathname: string, options: OverrideLoadOptions): Promise<void> {
   return preloadOverridesForPathname(pathname, options);
 }
 
-export function preloadOverridesForPathname(
-  pathname: string,
-  { cache = false, host }: OverrideLoadOptions,
-): Promise<void> {
+export function preloadOverridesForPathname(pathname: string, { cache = false }: OverrideLoadOptions): Promise<void> {
   if (!_outsmartly_enabled) {
     return Promise.resolve();
-  }
-
-  if (host) {
-    currentHost = host;
   }
 
   if (cache) {
@@ -167,18 +84,27 @@ export function preloadOverridesForPathname(
   }
 
   const suspensePromise = new Promise<void>(async (resolve, reject) => {
+    // Usually it's relative, but it could also be configured to be absolute
+    const endpoint = state.endpoints.overrides.startsWith('/')
+      ? new URL(`${location.origin}${state.endpoints.overrides}`)
+      : new URL(state.endpoints.overrides);
+    // This way if there are already query params we won't
+    // blow them away when we add our own.
+    endpoint.searchParams.set('route', pathname);
+    // We temporarily need to set a version number because the backend
+    // wants to introduce breaking changes, but only once everyone has
+    // moved off the old version. So it's checking for ?v=2.
+    endpoint.searchParams.set('v', '2');
+
     try {
-      const endpoint = `/__outsmartly__/overrides?route=${encodeURIComponent(
-        pathname,
-      )}`;
-      const resp = await fetch(currentHost ? currentHost + endpoint : endpoint);
+      const resp = await fetch(endpoint.href);
       const data: OutsmartlyScriptData = await resp.json();
 
       setOverridesForPathname(data, pathname);
       resolve();
     } catch (e) {
-      console.error(e);
-      overridesByPathname[pathname] = {
+      console.error(`Unable to fetch overrides for ${endpoint}`, e);
+      state.overridesByPathname[pathname] = {
         pathname,
         isLoading: false,
       };
@@ -186,7 +112,7 @@ export function preloadOverridesForPathname(
     }
   });
 
-  overridesByPathname[pathname] = {
+  state.overridesByPathname[pathname] = {
     pathname,
     suspensePromise,
     isLoading: true,
