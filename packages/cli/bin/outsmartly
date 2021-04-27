@@ -1,3 +1,30 @@
 #!/usr/bin/env node
 
+/**
+ * This file is specially crafted to work all the way down to Node v7 gracefully
+ * to warn them that their version of node isn't support--but we don't stop them.
+ */
+var chalk;
+try {
+  chalk = require('chalk');
+} catch (e) {
+  chalk = {
+    red: function (value) {
+      return value;
+    }
+  };
+}
+var versionParts = process.versions.node.split('.');
+var nodeMajorVersion = versionParts[0];
+
+if (Number(nodeMajorVersion) < 14) {
+  console.warn(
+    chalk.red(
+      '\n\n🚨 Warning: you are using an unsupported version of Node (' +
+        process.versions.node +
+        ') @outsmartly/cli officially supports Node v14 or higher.\n\n'
+    )
+  );
+}
+
 require('./outsmartly.cjs');
