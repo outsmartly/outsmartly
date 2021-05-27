@@ -2,13 +2,13 @@
 
 Interceptors, as they are aptly named, are used whenever you want to intercept a request at the CDN edge, before it would otherwise go to your configured origin.
 
-You can use them to make API endpoints at the edge, proxy requests to different origins (like images services, analytics, etc.), redirects, authentication, and more. Since interceptors run at the CDN edge, closer to your users, they can be used as a more performant replacement for many things you would have otherwise hit your origin for.
+You can use them to make API endpoints at the edge, proxy requests to different origins \(like images services, analytics, etc.\), redirects, authentication, and more. Since interceptors run at the CDN edge, closer to your users, they can be used as a more performant replacement for many things you would have otherwise hit your origin for.
 
-Like other parts of your config, interceptors run inside a JavaScript environment in Outsmartly's CDN edge. It uses the standardized web APIs, such as [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request), [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), and others; it does not have a DOM and is not a Node.js runtime. This is part of the reason (among many) that Outsmartly is able to offer the performance it does.
+Like other parts of your config, interceptors run inside a JavaScript environment in Outsmartly's CDN edge. It uses the standardized web APIs, such as [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request), [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), and others; it does not have a DOM and is not a Node.js runtime. This is part of the reason \(among many\) that Outsmartly is able to offer the performance it does.
 
 The signature of an interceptor is a function which accepts one argument: an [`OutsmartlyEvent`](reference-guide/outsmartlyevent.md). The `OutsmartlyEvent` contains additional information such as the [`OutsmartlyRequest`](reference-guide/outsmartlyrequest.md) object, [`OutsmartlyVisitor`](reference-guide/outsmartlyvisitor.md), helpers for cookies, and more.
 
-```ts
+```typescript
 function intercept?(event: OutsmartlyInterceptEvent): PromiseOrValue<Response>;
 
 type PromiseOrValue<T> = Promise<T> | T;
@@ -16,7 +16,7 @@ type PromiseOrValue<T> = Promise<T> | T;
 
 The simplest interceptor that makes a different request to a different URL looks like this:
 
-```js
+```javascript
 function intercept(event) {
   return fetch('https://api.github.com/users/outsmartly');
 }
@@ -24,7 +24,7 @@ function intercept(event) {
 
 A more complex example might be proxying the entire request to GitHub instead:
 
-```js
+```javascript
 async function intercept(event) {
   const url = new URL(event.url);
   // This will change only the host, not the pathname/search/port
@@ -44,7 +44,7 @@ Outsmartly's path matching syntax follows the same behavior as Express v4, so yo
 While this syntax is popular, tried and true, some do not realize that named route params are not greedy; they do not match anything past the next slash. So if you had used `/github-proxy/:path` instead, and made a request to `/github-proxy/users/outsmartly`, `:path` would not have matched. If you used `:path*`, with an asterisk, it would match the request, but `:path` only captures `users` it would not have captured `/outsmartly`.
 {% endhint %}
 
-```js
+```javascript
 export default {
   host: 'example.outsmartly.app',
   environments: [
@@ -55,9 +55,9 @@ export default {
   ],
   routes: [
     {
-      path: '/github-proxy/*',
       // Instead of defining this as 'function intercept(event)' we're
       // utilizing JavaScript shorthand object methods. Either approach works.
+      path: '/github-proxy/*',
       async intercept(event) {
         const proxiedPath = event.request.outsmartly.params[0];
         const url = new URL(event.url);
@@ -82,7 +82,7 @@ Even if you have to make requests to external databases, it can still be faster 
 
 Here's a pseudo-code example where we call `someHowQueryDatabaseForUser(userId)` to query our database, then format the result as a JSON response.
 
-```js
+```javascript
 export default {
   host: 'example.outsmartly.app',
   environments: [
@@ -113,3 +113,4 @@ export default {
 {% hint style="info" %}
 If you do make external requests from your interceptor, keep in mind the geographic location of the destination will impact the API response times. When possible, try to utilize various forms of caching.
 {% endhint %}
+

@@ -6,7 +6,7 @@ The signature of a middleware is a function which accepts two arguments: an [`Ou
 
 Middleware should call `next()` whenever they want to continue on to the "next" middleware, or if it's the last middleware, continue to the default, built-in functionality of Outsmartly.
 
-```ts
+```typescript
 type Middleware = (
   event: OutsmartlyMiddlewareEvent,
   next: (request?: Request) => Promise<Response>,
@@ -21,17 +21,17 @@ It's a good practice to give your middleware functions names so that if there ar
 
 This pattern gives you the most flexibility: you can do things before, and after the default behavior. Not only that, you can also pass a different `Request` object when you call `next(request)` which then changes what request will actually be made.
 
-The simplest middleware that does nothing (no-op) looks like this:
+The simplest middleware that does nothing \(no-op\) looks like this:
 
-```js
+```javascript
 function exampleMiddleware(event, next) {
   return next();
 }
 ```
 
-Middleware can be provided in you [outsmartly.config.js](reference-guide/outsmartly.config.js.md) in two places: at the top-level (applying all routes) or alternatively in a route itself (applying only paths that match.)
+Middleware can be provided in you [outsmartly.config.js](reference-guide/outsmartly.config.js.md) in two places: at the top-level \(applying all routes\) or alternatively in a route itself \(applying only paths that match.\)
 
-```js
+```javascript
 export default {
   host: 'example.outsmartly.app',
   environments: [
@@ -63,7 +63,7 @@ export default {
 
 But that's not a very exciting piece of middleware. So let's see how we might add headers both to the request AND the response:
 
-```js
+```javascript
 async function authorizationRedirectMiddleware(event, next) {
   // The request objects are not directly mutable, so we have to create our
   // own copy, using the existing headers and request as a base.
@@ -90,11 +90,11 @@ You don't HAVE to call `next()`, but if you don't, remember that then Outsmartly
 
 ### Set a cookie
 
-Sometimes you want to set a cookie from the edge/server so that it can be an [httpOnly](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies) cookie, which makes it inaccessible from client-side JavaScript in the browser (better security) and also is much more likely to survive longer without the browser or extensions deleting it.
+Sometimes you want to set a cookie from the edge/server so that it can be an [httpOnly](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#restrict_access_to_cookies) cookie, which makes it inaccessible from client-side JavaScript in the browser \(better security\) and also is much more likely to survive longer without the browser or extensions deleting it.
 
 Often this is inside an interceptor, but if you need to do this from middleware, it is also possible. Here's an example where we set a cookie the first time you land on a product page, so we can later tell to do things like personalization/recommendations.
 
-```js
+```javascript
 export default {
   host: 'example.outsmartly.app',
   environments: [
@@ -135,7 +135,7 @@ In this example, for request paths that start with `/app/` we check if they are 
 
 This demonstrates the using the request's path from [`event.url.pathname`](reference-guide/outsmartlyevent.md), along with getting a cookie named `'session'` by using the [`event.cookies`](reference-guide/outsmartlycookies.md) utility.
 
-```js
+```javascript
 function isAuthorized(sessionCookieValue) {
   // Somehow decide whether or not they are authorized.
   // e.g. using JSON Web Tokens
@@ -176,3 +176,4 @@ export default {
   ],
 };
 ```
+

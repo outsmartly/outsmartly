@@ -33,7 +33,7 @@ interface OutsmartlyReadonlyCookies {
    * Returns an iterable of cookies values.
    */
   values(): IterableIterator<string>;
-  
+
   /**
    * Returns an iterable of key, value pairs for every cookie entry.
    */
