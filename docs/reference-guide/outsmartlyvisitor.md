@@ -94,6 +94,7 @@ interface OutsmartlyVisitor {
      * Whether or not the request is from a known, "good" bot.
      */
     verified: boolean;
+
     /**
      * A number between 0-100. The higher the score, the more likely it's an automated
      * request, with 100 meaning we are certain it is a bot and 0 meaning we do not know
