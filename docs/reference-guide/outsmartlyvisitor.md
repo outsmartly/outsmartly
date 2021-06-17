@@ -85,6 +85,21 @@ interface OutsmartlyVisitor {
    * The two letter country abbreviation of the visitor, e.g. "US"
    */
   country: string;
+
+  /**
+   * Information about how likely this visitor is actually automated/scripted aka a bot.
+   */
+  bot: {
+    /**
+     * Whether or not the request is from a known, "good" bot.
+     */
+    verified: boolean;
+    /**
+     * A number between 0-100. The higher the score, the more likely it's an automated
+     * request, with 100 meaning we are certain it is a bot and 0 meaning we do not know
+     * at all.
+     */
+    score: number;
+  };
 }
 ```
-
