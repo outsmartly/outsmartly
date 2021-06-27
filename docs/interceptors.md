@@ -1,8 +1,8 @@
 # Interceptors
 
-Interceptors, as they are aptly named, are used whenever you want to intercept a request at the CDN edge, before it would otherwise go to your configured origin.
+Interceptors are used whenever you want to intercept a request at the CDN edge, before it would otherwise go to your origin server.
 
-You can use them to make API endpoints at the edge, proxy requests to different origins \(like images services, analytics, etc.\), redirects, authentication, and more. Since interceptors run at the CDN edge, closer to your users, they can be used as a more performant replacement for many things you would have otherwise hit your origin for.
+You can use them to make API serverless endpoints at the edge, proxy requests to different origins (like images services, analytics, etc.), redirects, authentication, and more. Since interceptors run at the CDN edge, closer to your users, they can be used as a more performant replacement for many things you would have otherwise hit your origin for.
 
 Like other parts of your config, interceptors run inside a JavaScript environment in Outsmartly's CDN edge. It uses the standardized web APIs, such as [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request), [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), and others; it does not have a DOM and is not a Node.js runtime. This is part of the reason \(among many\) that Outsmartly is able to offer the performance it does.
 
