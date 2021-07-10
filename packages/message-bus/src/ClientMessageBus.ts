@@ -8,6 +8,10 @@ export class ClientMessageBus extends MessageBus {
 }
 
 async function writeToEdge(messages: MessageBusMessage[]): Promise<void> {
-  // etc
-  // e.g. await fetch(`/__outsmartly__/messages`, { method: 'POST', body });
+  // Make API call to send the event to Outsmartly's edge
+  fetch('/__outsmartly__/events', {
+    method: 'POST',
+    body: JSON.stringify(messages),
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
