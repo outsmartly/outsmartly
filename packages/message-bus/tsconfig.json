@@ -1,11 +1,12 @@
 {
-  "include": ["src", "../../../internals/packages/edge-worker/src/EdgeMessageBus.ts"],
+  "include": ["./src/**/*.ts", "./types/**/*.ts"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "commonjs",
-    "lib": ["ESNext", "WebWorker"],
+    "lib": ["ESNext", "WebWorker", "DOM"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "noImplicitOverride": true,
     "resolveJsonModule": true,
     "jsx": "preserve",
     "declaration": true,

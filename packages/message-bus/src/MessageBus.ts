@@ -1,12 +1,10 @@
-import { latestEvent } from './env';
 import { MessageBusMessage } from './MessageBusMessage';
+import { MessageDataByType } from './messageTypes';
 
 /**
  * Message listeners (i.e., event listeners) must be of this function type.
  */
- type MessageBusListener<T extends string, D> = (
-  message: MessageBusMessage<T, D>,
-) => Promise<void> | void;
+export type MessageBusListener<T extends string, D> = (message: MessageBusMessage<T, D>) => Promise<void> | void;
 
 /**
  * The MessageBus class. Can be used either client-side or edge-side. A
@@ -18,38 +16,76 @@ import { MessageBusMessage } from './MessageBusMessage';
  * - once: attach an event listener that will run only one time
  * - emit: dispatch an event
  */
- export class MessageBus {
-  private _listenersByMessageType = new Map<
-    string,
-    Set<MessageBusListener<string, unknown>>
-  >();
+export abstract class MessageBus {
+  private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
+  // Buffer to hold messages prior to writing them to the external destination.
+  protected _throttleBuffer: MessageBusMessage[] = [];
+  protected _throttleDelay = 250;
+  protected _throttleTimerId: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Consumer must pass in a function that writes an array of emitted events to
-   * some desired location.
-   */
-  constructor(
-    private writeToExternal: (batch: MessageBusMessage[]) => Promise<void>,
-  ) {}
+  protected abstract _writeToExternal(messages: MessageBusMessage[]): Promise<void>;
+  protected abstract _waitUntil(promise: Promise<unknown> | void): void;
+
+  private _throttledWriteToExternal(message: { type: string; data: unknown }): void {
+    this._throttleBuffer.push(message);
+    if (this._throttleTimerId) {
+      return;
+    }
+
+    this._waitUntil(
+      new Promise<void>((resolve) => {
+        this._throttleTimerId = setTimeout(() => {
+          this.flushToExternal();
+          resolve();
+        }, this._throttleDelay);
+      }),
+    );
+  }
+
+  flushToExternal(): void {
+    // No sense calling this._writeToExternal() with a false alarm,
+    // that way they don't need to handle emptiness themselves.
+    if (this._throttleBuffer.length === 0) {
+      return;
+    }
+
+    this._writeToExternal(this._throttleBuffer);
+
+    // It's possible this function will be called by someone else directly
+    // in which case we need to cancel the timer if it's still running.
+    if (this._throttleTimerId) {
+      clearTimeout(this._throttleTimerId);
+    }
+    this._throttleBuffer = [];
+    this._throttleTimerId = null;
+  }
 
   /** Attach an event listener */
-  on(messageType: string, callback: MessageBusListener<string, unknown>): this;
-  on(messageType: string, callback: MessageBusListener<any, any>): this {
+  on<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  on<T extends string>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: MessageBusListener<T, unknown>,
+  ): this;
+  on(type: string, callback: MessageBusListener<any, any>): this {
     // If it doesn't already have a listener for this message type, add one.
-    if (!this._listenersByMessageType.has(messageType)) {
-      this._listenersByMessageType.set(messageType, new Set());
+    if (!this._listenersByMessageType.has(type)) {
+      this._listenersByMessageType.set(type, new Set());
     }
     // Grab the Set of listeners for this message type
-    const listeners = this._listenersByMessageType.get(messageType)!;
+    const listeners = this._listenersByMessageType.get(type)!;
     listeners.add(callback);
 
     return this;
   }
 
   /** Remove an event listener */
-  off(messageType: string, callback: MessageBusListener<string, unknown>): this;
-  off(messageType: string, callback: MessageBusListener<any, any>): this {
-    const listeners = this._listenersByMessageType.get(messageType);
+  off<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  off<T extends string>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: MessageBusListener<T, unknown>,
+  ): this;
+  off(type: string, callback: MessageBusListener<any, any>): this {
+    const listeners = this._listenersByMessageType.get(type);
     if (!listeners) {
       return this;
     }
@@ -59,26 +95,27 @@ import { MessageBusMessage } from './MessageBusMessage';
   }
 
   /** Attach an event listener that will run only once */
-  once(
-    messageType: string,
-    callback: MessageBusListener<string, unknown>,
+  once<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  once<T extends string>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: MessageBusListener<T, unknown>,
   ): this;
-  once(messageType: string, callback: MessageBusListener<any, any>): this {
+  once(type: string, callback: MessageBusListener<any, any>): this {
     const outerCallback: MessageBusListener<string, unknown> = (message) => {
-      this.off(messageType, outerCallback);
+      this.off(type, outerCallback);
       callback(message);
     };
-    this.on(messageType, outerCallback);
+    this.on(type, outerCallback);
 
     return this;
   }
 
   /** Emit an event (i.e. trigger, fire) */
-  emit(type: string, data: unknown): this;
+  emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
+  emit<T extends string>(type: T extends keyof MessageDataByType ? never : T, data: unknown): this;
   emit<T>(type: string, data: T): this {
-    latestEvent.waitUntil(this._throttledWriteToExternal({ type, data }));
+    this._throttledWriteToExternal({ type, data });
 
-    // Execute the listeners for this message
     const listeners = this._listenersByMessageType.get(type);
     if (!listeners) {
       return this;
@@ -86,36 +123,9 @@ import { MessageBusMessage } from './MessageBusMessage';
 
     for (const listener of Array.from(listeners)) {
       const message = new MessageBusMessage(type, data);
-      latestEvent.waitUntil(listener(message));
+      this._waitUntil(listener(message));
     }
 
     return this;
-  }
-
-  // An array to hold emitted events
-  private _batch: MessageBusMessage[] = [];
-  private _wait: number = 250;
-  private _timerId: ReturnType<typeof setTimeout> | null = null;
-
-  _throttledWriteToExternal(message: {
-    type: string;
-    data: unknown;
-  }): Promise<void> {
-    return new Promise((resolve) => {
-      // Push current message to batch
-      this._batch.push(message);
-      // If a timer is already running, resolve the Promise and return
-      if (this._timerId) {
-        resolve();
-        return;
-      }
-      // If not, start one
-      this._timerId = setTimeout(() => {
-        this.writeToExternal(this._batch);
-        this._batch = [];
-        this._timerId = null;
-        resolve();
-      }, this._wait);
-    });
   }
 }
