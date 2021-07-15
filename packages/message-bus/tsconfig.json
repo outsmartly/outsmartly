@@ -1,9 +1,9 @@
 {
   "include": ["./src/**/*.ts", "./types/**/*.ts"],
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2015",
     "module": "commonjs",
-    "lib": ["ESNext", "WebWorker", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "noImplicitOverride": true,

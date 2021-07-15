@@ -6,6 +6,14 @@ import { MessageDataByType } from './messageTypes';
  */
 export type MessageBusListener<T extends string, D> = (message: MessageBusMessage<T, D>) => Promise<void> | void;
 
+export interface MessageBusOptions {
+  debug?: boolean;
+}
+
+const defaultOptions: MessageBusOptions = {
+  debug: false,
+};
+
 /**
  * The MessageBus class. Can be used either client-side or edge-side. A
  * MessageBus maintains a Map of listeners, where each key is an event type
@@ -17,14 +25,22 @@ export type MessageBusListener<T extends string, D> = (message: MessageBusMessag
  * - emit: dispatch an event
  */
 export abstract class MessageBus {
+  private _options: MessageBusOptions;
   private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
   // Buffer to hold messages prior to writing them to the external destination.
   protected _throttleBuffer: MessageBusMessage[] = [];
-  protected _throttleDelay = 250;
+  protected _throttleDelay = 1000;
   protected _throttleTimerId: ReturnType<typeof setTimeout> | null = null;
 
   protected abstract _writeToExternal(messages: MessageBusMessage[]): Promise<void>;
   protected abstract _waitUntil(promise: Promise<unknown> | void): void;
+
+  constructor(options?: MessageBusOptions) {
+    this._options = {
+      ...defaultOptions,
+      ...options,
+    };
+  }
 
   private _throttledWriteToExternal(message: { type: string; data: unknown }): void {
     this._throttleBuffer.push(message);
@@ -47,6 +63,10 @@ export abstract class MessageBus {
     // that way they don't need to handle emptiness themselves.
     if (this._throttleBuffer.length === 0) {
       return;
+    }
+
+    if (this._options.debug) {
+      console.log('MessageBus flushToExternal()');
     }
 
     this._writeToExternal(this._throttleBuffer);
@@ -114,6 +134,10 @@ export abstract class MessageBus {
   emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
   emit<T extends string>(type: T extends keyof MessageDataByType ? never : T, data: unknown): this;
   emit<T>(type: string, data: T): this {
+    if (this._options.debug) {
+      console.log(`MessageBus emit('${type}',`, data, ')');
+    }
+
     this._throttledWriteToExternal({ type, data });
 
     const listeners = this._listenersByMessageType.get(type);

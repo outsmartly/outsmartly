@@ -1,5 +1,5 @@
 import { ClientMessageBus } from './ClientMessageBus';
-import { MessageBus } from './MessageBus';
+import { MessageBus, MessageBusOptions } from './MessageBus';
 
 // Lazily creating as a micro-optimization for initial bundle evaluation.
 // Today, it probably doesn't matter, but "just in case" it's easy enough
@@ -13,7 +13,7 @@ let messageBus: ClientMessageBus | undefined;
  * Custom hook that decouples importing the client-side message bus from its
  * use by consumers. Allows us to add functionality to all instances.
  */
-export function useMessageBus(): MessageBus {
+export function useMessageBus(options?: MessageBusOptions): MessageBus {
   // If someone uses this "hook" in their edge code, it should still work as expected
   // which means it needs to use the EdgeMessageBus, instead.
   if (typeof window === 'undefined' && typeof __OUTSMARTLY_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_HIRED__ === 'object') {
@@ -21,7 +21,7 @@ export function useMessageBus(): MessageBus {
   }
 
   if (!messageBus) {
-    messageBus = new ClientMessageBus();
+    messageBus = new ClientMessageBus(options);
   }
 
   return messageBus;
