@@ -1,6 +1,6 @@
 # Plugins
 
-Plugins are used to encapsulate abstract away adding functionality to your Outsmartly edge. They'll often include things like middleware, interceptors, and overrides.
+Plugins are used to encapsulate and abstract away adding functionality to your Outsmartly edge. They'll often include things like middleware, interceptors, and overrides.
 
 Making your own plugins is possible, but more commonly you'll use one of the existing ones maintained by Outsmartly, or ones from the community:
 
