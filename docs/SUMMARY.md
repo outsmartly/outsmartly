@@ -5,6 +5,7 @@
 * [Performance Best Practices / High Performance Checklist](performance-best-practices.md)
 * [Interceptors](interceptors.md)
 * [Middleware](middleware.md)
+* [Plugins](plugins.md)
 * [Reference Guide](reference-guide/README.md)
   * [outsmartly.config.js](reference-guide/outsmartly.config.js.md)
   * [OutsmartlyRequest](reference-guide/outsmartlyrequest.md)
@@ -14,5 +15,6 @@
   * [OutsmartlyOverrideEvent](reference-guide/outsmartlyoverrideevent.md)
   * [OutsmartlyMiddlewareEvent](reference-guide/outsmartlymiddlewareevent.md)
   * [OutsmartlyInterceptorEvent](reference-guide/outsmartlyinterceptorevent.md)
+  * [MessageBus](reference-guide/messagebus.md)
 * [Troubleshooting / Debugging](troubleshooting.md)
 
