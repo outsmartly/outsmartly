@@ -19,7 +19,7 @@ describe('MessageBus', () => {
   });
 
   describe('emit()', () => {
-    it('writes messages to external after throttle delay', async () => {
+    it('writes messages to external after throttle delay', () => {
       const expectedMessages = [
         {
           type: 'Example.FIRST',
@@ -45,14 +45,15 @@ describe('MessageBus', () => {
 
       messages.emit(expectedMessages[1].type, expectedMessages[1].data);
       expect(messages._waitUntil).toBeCalledTimes(1);
+      expect(messages._writeToExternal).toBeCalledTimes(0);
 
-      jest.advanceTimersByTime(throttleDelay);
+      jest.advanceTimersByTime(throttleDelay / 2);
 
       expect(messages._writeToExternal).toBeCalledTimes(1);
       expect(messages._writeToExternal).toBeCalledWith(expectedMessages);
     });
 
-    it('writes messages to external explicitly flushed early', async () => {
+    it('writes messages to external explicitly flushed early', () => {
       const expectedMessages = [
         {
           type: 'Example.FIRST',
@@ -81,11 +82,15 @@ describe('MessageBus', () => {
 
       expect(messages._writeToExternal).toBeCalledTimes(1);
       expect(messages._writeToExternal).toBeCalledWith(expectedMessages);
+
+      // Make sure it doesn't try to write again
+      jest.advanceTimersByTime(throttleDelay / 2);
+      expect(messages._writeToExternal).toBeCalledTimes(1);
     });
   });
 
   describe('on()', () => {
-    it('does not invoke listener for previously (missed) messages', async () => {
+    it('does not invoke listener for previously (missed) messages', () => {
       const type = 'Example.FIRST';
       const data = {
         first: 1,
@@ -97,14 +102,14 @@ describe('MessageBus', () => {
       expect(listener).toBeCalledTimes(0);
     });
 
-    it('does not invoke listener for non-matching message types', async () => {
+    it('does not invoke listener for non-matching message types', () => {
       const listener = jest.fn();
       messages.on('Example.FIRST', listener);
       messages.emit('Example.DOES_NOT_MATCH', null);
       expect(listener).toBeCalledTimes(0);
     });
 
-    it('invokes listener for any future matching events', async () => {
+    it('invokes listener for any future matching events', () => {
       const type = 'Example.FIRST';
       const data = {
         first: 1,
