@@ -56,14 +56,14 @@ export default {
   // All routes will have this middleware applied
   middleware: [
     async function firstMiddleware(event, next) {
-      event.messageBus.once('YourCustomMessages.COMPONENT_OVERRIDDEN', message => {
+      event.messageBus.once('YourCustomMessages.COMPONENT_OVERRIDDEN', (message) => {
         event.log('Message received!', message);
       });
       return await next();
     },
   ],
   routes: [
-    {.
+    {
       path: '/some-base-path/*',
       overrides: [
         {
