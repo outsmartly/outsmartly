@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "ssh://git@github.com/outsmartly/outsmartly-config-deployment.git",
+    "url": "ssh://git@github.com/outsmartly/outsmartly.git",
     "directory": "packages/cli"
   },
   "oclif": {

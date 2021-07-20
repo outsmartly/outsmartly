@@ -1,0 +1,20 @@
+{
+  "include": ["./src/**/*.ts", "./types/**/*.ts"],
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "commonjs",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "jsx": "preserve",
+    "declaration": true,
+    "strict": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "types": ["@types/jest", "@types/node"],
+    "outDir": "dist/"
+  }
+}
