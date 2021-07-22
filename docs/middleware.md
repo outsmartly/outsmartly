@@ -76,7 +76,7 @@ async function authorizationRedirectMiddleware(event, next) {
   // Move on to the next middleware, or built-in behavior. When this promise
   // resolves, we have already received the initial response from the origin
   // server (or the cache.)
-  const response = await next();
+  const response = await next(request);
   response.headers.set('A-Different-Response-Header', 'another-thing');
 
   // If you wanted to, you could even return a totally different response.
