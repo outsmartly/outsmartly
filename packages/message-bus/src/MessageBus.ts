@@ -82,9 +82,9 @@ export abstract class MessageBus {
 
   /** Attach an event listener */
   on<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
-  on<T extends string>(
+  on<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, unknown>,
+    callback: MessageBusListener<T, D>,
   ): this;
   on(type: string, callback: MessageBusListener<any, any>): this {
     // If it doesn't already have a listener for this message type, add one.
@@ -100,9 +100,9 @@ export abstract class MessageBus {
 
   /** Remove an event listener */
   off<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
-  off<T extends string>(
+  off<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, unknown>,
+    callback: MessageBusListener<T, D>,
   ): this;
   off(type: string, callback: MessageBusListener<any, any>): this {
     const listeners = this._listenersByMessageType.get(type);
@@ -116,9 +116,9 @@ export abstract class MessageBus {
 
   /** Attach an event listener that will run only once */
   once<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
-  once<T extends string>(
+  once<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, unknown>,
+    callback: MessageBusListener<T, D>,
   ): this;
   once(type: string, callback: MessageBusListener<any, any>): this {
     const outerCallback: MessageBusListener<string, unknown> = (message) => {
@@ -132,7 +132,7 @@ export abstract class MessageBus {
 
   /** Emit an event (i.e. trigger, fire) */
   emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
-  emit<T extends string>(type: T extends keyof MessageDataByType ? never : T, data: unknown): this;
+  emit<T extends string, D = unknown>(type: T extends keyof MessageDataByType ? never : T, data: D): this;
   emit<T>(type: string, data: T): this {
     if (this._options.debug) {
       console.log(`MessageBus emit('${type}',`, data, ')');
