@@ -1,10 +1,16 @@
 import { MessageBusMessage } from './MessageBusMessage';
-import { MessageDataByType } from './messageTypes';
+import { MessageDataByType } from './MessageDataByType';
+import { OutsmartlyClientMessageEvent, OutsmartlyEvent, OutsmartlyMessageEvent } from './OutsmartlyEvent';
+import { OutsmartlyVisitor } from './types';
 
 /**
  * Message listeners (i.e., event listeners) must be of this function type.
  */
-export type MessageBusListener<T extends string, D> = (message: MessageBusMessage<T, D>) => Promise<void> | void;
+export type MessageBusListener<
+  MessageType extends string,
+  Data,
+  MessageEvent extends OutsmartlyMessageEvent<MessageType, Data> = OutsmartlyMessageEvent<MessageType, Data>,
+> = (event: MessageEvent) => Promise<void> | void;
 
 export interface MessageBusOptions {
   debug?: boolean;
@@ -28,12 +34,9 @@ export abstract class MessageBus {
   private _options: MessageBusOptions;
   private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
   // Buffer to hold messages prior to writing them to the external destination.
-  protected _throttleBuffer: MessageBusMessage[] = [];
+  protected _throttleBuffer: MessageBusMessage<string, unknown>[] = [];
   protected _throttleDelay = 1000;
   protected _throttleTimerId: ReturnType<typeof setTimeout> | null = null;
-
-  protected abstract _writeToExternal(messages: MessageBusMessage[]): Promise<void>;
-  protected abstract _waitUntil(promise: Promise<unknown> | void): void;
 
   constructor(options?: MessageBusOptions) {
     this._options = {
@@ -41,6 +44,13 @@ export abstract class MessageBus {
       ...options,
     };
   }
+
+  protected abstract _writeToExternal(messages: MessageBusMessage<string, unknown>[]): Promise<void>;
+  protected abstract _waitUntil(promise: Promise<unknown> | void): void;
+  protected abstract _notifyListener(
+    listener: MessageBusListener<string, unknown>,
+    message: MessageBusMessage<string, unknown>,
+  ): void;
 
   private _throttledWriteToExternal(message: { type: string; data: unknown }): void {
     this._throttleBuffer.push(message);
@@ -133,7 +143,7 @@ export abstract class MessageBus {
   /** Emit an event (i.e. trigger, fire) */
   emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
   emit<T extends string, D = unknown>(type: T extends keyof MessageDataByType ? never : T, data: D): this;
-  emit<T>(type: string, data: T): this {
+  emit<D>(type: string, data: D): this {
     if (this._options.debug) {
       console.log(`MessageBus emit('${type}',`, data, ')');
     }
@@ -147,7 +157,7 @@ export abstract class MessageBus {
 
     for (const listener of Array.from(listeners)) {
       const message = new MessageBusMessage(type, data);
-      this._waitUntil(listener(message));
+      this._notifyListener(listener, message);
     }
 
     return this;

@@ -4,7 +4,7 @@
 
 ```typescript
 export default {
-  name: 'my-example-website',
+  host: 'my-example-website',
   environments: [
     {
       name: 'production',
@@ -42,9 +42,9 @@ export default {
 ```typescript
 interface OutsmartlyConfig {
   /**
-   * The project name, for example, 'my-example-website'
+   * The Outsmartly-linked domain to deploy to, e.g. 'example.outsmartly.app'
    */
-  name: string;
+  host: string;
 
   /**
    * The possible deployment environments.
@@ -69,6 +69,11 @@ interface OutsmartlyConfig {
      */
     origin: string;
   }>;
+
+  /**
+   * Optional plugins made for Outsmartly's edge
+   */
+  plugins?: Plugin[];
 
   /**
    * Optional middleware that runs before any of your route handlers.
@@ -130,11 +135,10 @@ interface OutsmartlyConfig {
        * The lifecycle function where you compute and return the props you wish to
        * override.
        */
-      getOverrideProps(event: OutsmartlyOverrideEvent): PromiseOrValue<{ props: object }>;
+      getOverrideProps(event: OutsmartlyOverrideEvent): PromiseOrValue<{ props: object } | undefined>;
     }>;
   }>;
 }
 
 type PromiseOrValue<T> = Promise<T> | T;
 ```
-

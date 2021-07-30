@@ -1,8 +1,14 @@
-import { MessageBus } from './MessageBus';
+import { MessageBus, MessageBusListener, MessageBusOptions } from './MessageBus';
 import { MessageBusMessage } from './MessageBusMessage';
+import { OutsmartlyClientMessageEvent } from './OutsmartlyEvent';
+import { OutsmartlyClientVisitor } from './types';
 
 export class ClientMessageBus extends MessageBus {
-  override async _writeToExternal(messages: MessageBusMessage[]): Promise<void> {
+  constructor(protected _visitor: OutsmartlyClientVisitor, options?: MessageBusOptions) {
+    super(options);
+  }
+
+  protected override async _writeToExternal(messages: MessageBusMessage<string, unknown>[]): Promise<void> {
     const body = JSON.stringify(messages);
     // Using Blob so that Content-Type: application/json header is included
     const blob = new Blob([body], { type: 'application/json' });
@@ -14,7 +20,15 @@ export class ClientMessageBus extends MessageBus {
     navigator.sendBeacon('/.outsmartly/message-bus', blob);
   }
 
-  override _waitUntil() {
+  protected override _waitUntil(_promise: Promise<unknown> | void) {
     // Not needed clientside (unless some day this runs in Service Worker)
+  }
+
+  protected override _notifyListener(
+    listener: MessageBusListener<string, unknown>,
+    message: MessageBusMessage<string, unknown>,
+  ): void {
+    const event = new OutsmartlyClientMessageEvent(this, this._visitor, message);
+    this._waitUntil(listener(event));
   }
 }
