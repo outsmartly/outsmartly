@@ -3,7 +3,7 @@ import { MessageBusMessage } from './MessageBusMessage';
 import { OutsmartlyClientMessageEvent } from './OutsmartlyEvent';
 import { OutsmartlyClientVisitor } from './types';
 
-export class ClientMessageBus extends MessageBus<OutsmartlyClientVisitor> {
+export class ClientMessageBus extends MessageBus {
   constructor(protected _visitor: OutsmartlyClientVisitor, options?: MessageBusOptions) {
     super(options);
   }
