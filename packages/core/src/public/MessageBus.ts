@@ -30,7 +30,7 @@ const defaultOptions: MessageBusOptions = {
  * - once: attach an event listener that will run only one time
  * - emit: dispatch an event
  */
-export abstract class MessageBus<Visitor extends OutsmartlyVisitor = OutsmartlyVisitor> {
+export abstract class MessageBus {
   private _options: MessageBusOptions;
   private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
   // Buffer to hold messages prior to writing them to the external destination.
