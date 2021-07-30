@@ -57,9 +57,9 @@ export declare class OutsmartlyEdgeMessageEvent<T extends string, D>
   extends OutsmartlyEdgeEvent
   implements OutsmartlyMessageEvent<T, D>
 {
-  message: MessageBusMessage<T, D>;
   override messageBus: MessageBus;
   override visitor: OutsmartlyEdgeVisitor;
   override type: 'outsmartlyedgemessage';
+  message: MessageBusMessage<T, D>;
   cookies: OutsmartlyReadonlyCookies;
 }
