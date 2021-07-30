@@ -1,17 +1,18 @@
 {
-  "name": "@outsmartly/message-bus",
+  "name": "@outsmartly/core",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "files": [
     "/dist"
   ],
   "repository": {
     "type": "git",
     "url": "ssh://git@github.com/outsmartly/outsmartly.git",
-    "directory": "packages/message-bus"
+    "directory": "packages/core"
   },
   "scripts": {
     "build": "tsc",

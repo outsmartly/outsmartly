@@ -4,6 +4,6 @@
  * be something that occurs in server-side code. The term "message" is used
  * instead of "event" to distinguish these events from `OutsmartlyEvent` events.
  * */
- export class MessageBusMessage<T extends string = string, D = unknown> {
+export class MessageBusMessage<T extends string, D> {
   constructor(public type: T, public data: D) {}
 }
