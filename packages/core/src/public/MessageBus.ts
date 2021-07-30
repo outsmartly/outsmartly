@@ -6,9 +6,6 @@ import { OutsmartlyVisitor } from './types';
 /**
  * Message listeners (i.e., event listeners) must be of this function type.
  */
-/* export type MessageBusListener<T extends string, D> = (
-  event: OutsmartlyClientMessageEvent<T, D>,
-) => Promise<void> | void; */
 export type MessageBusListener<
   MessageType extends string,
   Data,
