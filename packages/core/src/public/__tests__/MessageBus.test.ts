@@ -1,17 +1,46 @@
 import { ClientMessageBus } from '../ClientMessageBus';
 import { OutsmartlyClientMessageEvent } from '../OutsmartlyEvent';
+import { setupMockServer } from '~/test/setupMockServer';
+import { MESSAGE_BUS_DEFAULT_THROTTLE_DELAY } from '../MessageBus';
+import { MessageBusMessage } from '../MessageBusMessage';
+
+function readBlobAsText(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.addEventListener('loadend', () => {
+      resolve(reader.result as string);
+    });
+    reader.readAsText(blob);
+  });
+}
+
+async function expectSendBeaconCalledWithMessage(
+  sendBeaconSpy: jest.SpyInstance,
+  expectedMessages: MessageBusMessage<string, unknown>[],
+): Promise<void> {
+  expect(sendBeaconSpy).toBeCalledTimes(1);
+  const body = JSON.stringify(expectedMessages);
+  const expectedBlob = new Blob([body], { type: 'application/json' });
+  expect(sendBeaconSpy).toBeCalledWith('/.outsmartly/message-bus', expectedBlob);
+
+  const actualBlob = sendBeaconSpy.mock.calls[0][1] as Blob;
+  // Blob matching doesn't work, have to manually check it
+  // https://github.com/facebook/jest/issues/7372
+  expect(actualBlob.type).toBe(expectedBlob.type);
+  expect(await readBlobAsText(actualBlob)).toBe(await readBlobAsText(expectedBlob));
+}
 
 describe('ClientMessageBus', () => {
-  const visitor = { id: '<mock outsmartly session id>' };
-  const throttleDelay = 100;
-
   class TestMessageBus extends ClientMessageBus {
-    override _throttleDelay = throttleDelay;
-    override _writeToExternal = jest.fn();
     override _waitUntil = jest.fn();
   }
 
   let messageBus!: TestMessageBus;
+  const visitor = { id: '<mock outsmartly session id>' };
+  const sendBeaconSpy = jest.spyOn(navigator, 'sendBeacon');
+
+  setupMockServer();
+
   beforeEach(() => {
     jest.useFakeTimers();
     messageBus = new TestMessageBus(visitor);
@@ -19,10 +48,15 @@ describe('ClientMessageBus', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.resetAllMocks();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   describe('emit()', () => {
-    it('writes messages to external after throttle delay', () => {
+    it('writes messages to external after throttle delay', async () => {
       const expectedMessages = [
         {
           type: 'Example.FIRST',
@@ -42,21 +76,19 @@ describe('ClientMessageBus', () => {
       expect(messageBus._waitUntil).toBeCalledTimes(1);
       expect(messageBus._waitUntil).toBeCalledWith(Promise.resolve());
 
-      expect(messageBus._writeToExternal).toBeCalledTimes(0);
-      jest.advanceTimersByTime(throttleDelay / 2);
-      expect(messageBus._writeToExternal).toBeCalledTimes(0);
+      expect(sendBeaconSpy).toBeCalledTimes(0);
+      jest.advanceTimersByTime(MESSAGE_BUS_DEFAULT_THROTTLE_DELAY / 2);
+      expect(sendBeaconSpy).toBeCalledTimes(0);
 
       messageBus.emit(expectedMessages[1].type, expectedMessages[1].data);
       expect(messageBus._waitUntil).toBeCalledTimes(1);
-      expect(messageBus._writeToExternal).toBeCalledTimes(0);
+      expect(sendBeaconSpy).toBeCalledTimes(0);
 
-      jest.advanceTimersByTime(throttleDelay / 2);
-
-      expect(messageBus._writeToExternal).toBeCalledTimes(1);
-      expect(messageBus._writeToExternal).toBeCalledWith(expectedMessages);
+      jest.advanceTimersByTime(MESSAGE_BUS_DEFAULT_THROTTLE_DELAY / 2);
+      await expectSendBeaconCalledWithMessage(sendBeaconSpy, expectedMessages);
     });
 
-    it('writes messages to external explicitly flushed early', () => {
+    it('writes messages to external explicitly flushed early', async () => {
       const expectedMessages = [
         {
           type: 'Example.FIRST',
@@ -78,17 +110,16 @@ describe('ClientMessageBus', () => {
       expect(messageBus._waitUntil).toBeCalledTimes(1);
       expect(messageBus._waitUntil).toBeCalledWith(Promise.resolve());
 
-      expect(messageBus._writeToExternal).toBeCalledTimes(0);
-      jest.advanceTimersByTime(throttleDelay / 2);
-      expect(messageBus._writeToExternal).toBeCalledTimes(0);
+      expect(sendBeaconSpy).toBeCalledTimes(0);
+      jest.advanceTimersByTime(MESSAGE_BUS_DEFAULT_THROTTLE_DELAY / 2);
+      expect(sendBeaconSpy).toBeCalledTimes(0);
       messageBus.flushToExternal();
 
-      expect(messageBus._writeToExternal).toBeCalledTimes(1);
-      expect(messageBus._writeToExternal).toBeCalledWith(expectedMessages);
+      await expectSendBeaconCalledWithMessage(sendBeaconSpy, expectedMessages);
 
       // Make sure it doesn't try to write again
-      jest.advanceTimersByTime(throttleDelay / 2);
-      expect(messageBus._writeToExternal).toBeCalledTimes(1);
+      jest.advanceTimersByTime(MESSAGE_BUS_DEFAULT_THROTTLE_DELAY / 2);
+      expect(sendBeaconSpy).toBeCalledTimes(1);
     });
   });
 

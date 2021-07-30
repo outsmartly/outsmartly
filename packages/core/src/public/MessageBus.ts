@@ -20,6 +20,8 @@ const defaultOptions: MessageBusOptions = {
   debug: false,
 };
 
+export const MESSAGE_BUS_DEFAULT_THROTTLE_DELAY = 1000;
+
 /**
  * The MessageBus class. Can be used either client-side or edge-side. A
  * MessageBus maintains a Map of listeners, where each key is an event type
@@ -35,7 +37,7 @@ export abstract class MessageBus {
   private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
   // Buffer to hold messages prior to writing them to the external destination.
   protected _throttleBuffer: MessageBusMessage<string, unknown>[] = [];
-  protected _throttleDelay = 1000;
+  protected _throttleDelay = MESSAGE_BUS_DEFAULT_THROTTLE_DELAY;
   protected _throttleTimerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options?: MessageBusOptions) {
