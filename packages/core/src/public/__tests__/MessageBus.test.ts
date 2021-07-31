@@ -1,6 +1,6 @@
 import { ClientMessageBus } from '../ClientMessageBus';
 import { OutsmartlyClientMessageEvent } from '../OutsmartlyEvent';
-import { setupMockServer } from '~/test/setupMockServer';
+import { setupMockServer } from '../../../test/setupMockServer';
 import { MESSAGE_BUS_DEFAULT_THROTTLE_DELAY } from '../MessageBus';
 import { MessageBusMessage } from '../MessageBusMessage';
 

@@ -7,9 +7,7 @@ import { OutsmartlyVisitor } from './types';
  * Message listeners (i.e., event listeners) must be of this function type.
  */
 export type MessageBusListener<
-  MessageType extends string,
-  Data,
-  MessageEvent extends OutsmartlyMessageEvent<MessageType, Data> = OutsmartlyMessageEvent<MessageType, Data>,
+  MessageEvent extends OutsmartlyMessageEvent<string, unknown> = OutsmartlyMessageEvent<string, unknown>,
 > = (event: MessageEvent) => Promise<void> | void;
 
 export interface MessageBusOptions {
@@ -34,7 +32,7 @@ export const MESSAGE_BUS_DEFAULT_THROTTLE_DELAY = 1000;
  */
 export abstract class MessageBus {
   private _options: MessageBusOptions;
-  private _listenersByMessageType = new Map<string, Set<MessageBusListener<string, unknown>>>();
+  private _listenersByMessageType = new Map<string, Set<MessageBusListener<OutsmartlyMessageEvent<string, unknown>>>>();
   // Buffer to hold messages prior to writing them to the external destination.
   protected _throttleBuffer: MessageBusMessage<string, unknown>[] = [];
   protected _throttleDelay = MESSAGE_BUS_DEFAULT_THROTTLE_DELAY;
@@ -50,11 +48,11 @@ export abstract class MessageBus {
   protected abstract _writeToExternal(messages: MessageBusMessage<string, unknown>[]): Promise<void>;
   protected abstract _waitUntil(promise: Promise<unknown> | void): void;
   protected abstract _notifyListener(
-    listener: MessageBusListener<string, unknown>,
+    listener: MessageBusListener<OutsmartlyMessageEvent<string, unknown>>,
     message: MessageBusMessage<string, unknown>,
   ): void;
 
-  private _throttledWriteToExternal(message: { type: string; data: unknown }): void {
+  protected _throttledWriteToExternal(message: { type: string; data: unknown }): void {
     this._throttleBuffer.push(message);
     if (this._throttleTimerId) {
       return;
@@ -93,12 +91,15 @@ export abstract class MessageBus {
   }
 
   /** Attach an event listener */
-  on<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  on<T extends keyof MessageDataByType>(
+    type: T,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
+  ): this;
   on<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, D>,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, D>>,
   ): this;
-  on(type: string, callback: MessageBusListener<any, any>): this {
+  on(type: string, callback: MessageBusListener<OutsmartlyMessageEvent<any, any>>): this {
     // If it doesn't already have a listener for this message type, add one.
     if (!this._listenersByMessageType.has(type)) {
       this._listenersByMessageType.set(type, new Set());
@@ -111,12 +112,15 @@ export abstract class MessageBus {
   }
 
   /** Remove an event listener */
-  off<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  off<T extends keyof MessageDataByType>(
+    type: T,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
+  ): this;
   off<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, D>,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, D>>,
   ): this;
-  off(type: string, callback: MessageBusListener<any, any>): this {
+  off(type: string, callback: MessageBusListener<OutsmartlyMessageEvent<any, any>>): this {
     const listeners = this._listenersByMessageType.get(type);
     if (!listeners) {
       return this;
@@ -127,13 +131,16 @@ export abstract class MessageBus {
   }
 
   /** Attach an event listener that will run only once */
-  once<T extends keyof MessageDataByType>(type: T, callback: MessageBusListener<T, MessageDataByType[T]>): this;
+  once<T extends keyof MessageDataByType>(
+    type: T,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
+  ): this;
   once<T extends string, D = unknown>(
     type: T extends keyof MessageDataByType ? never : T,
-    callback: MessageBusListener<T, D>,
+    callback: MessageBusListener<OutsmartlyMessageEvent<T, D>>,
   ): this;
-  once(type: string, callback: MessageBusListener<any, any>): this {
-    const outerCallback: MessageBusListener<string, unknown> = (message) => {
+  once(type: string, callback: MessageBusListener<OutsmartlyMessageEvent<any, any>>): this {
+    const outerCallback: MessageBusListener<OutsmartlyMessageEvent<string, unknown>> = (message) => {
       this.off(type, outerCallback);
       callback(message);
     };

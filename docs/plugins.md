@@ -53,7 +53,7 @@ interface Plugin {
    * well as the `messageBus`, which can be used to listen for or emit messages
    * that others can also listen for.
    */
-  setup?(context: { config: SiteConfig; messageBus: MessageBus }): void;
+  setup?(context: { config: OutsmartlyConfig; messageBus: EdgeMessageBus }): void;
 }
 ```
 

@@ -26,6 +26,13 @@ export function useMessageBus(options?: MessageBusOptions): MessageBus {
 }
 
 function getVisitorId(): string {
+  // When doing SSR/SSG. Technically if they ever some how on() and emit()
+  // on the origin server they'd now get an empty string for a visitor ID,
+  // which isn't ideal, but they'd be breaking the rules of React anyway.
+  if (typeof document === 'undefined') {
+    return '';
+  }
+
   const input = document.cookie;
   // We probably want to eventually error when this happens,
   // but for now we won't because it would error during local

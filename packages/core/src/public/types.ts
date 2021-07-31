@@ -1,3 +1,4 @@
+import { EdgeMessageBus } from './EdgeMessageBus';
 import { MessageBus } from './MessageBus';
 import { OutsmartlyEdgeRequestEvent } from './OutsmartlyEvent';
 
@@ -246,7 +247,7 @@ export interface Route {
 
 export interface Plugin {
   name: string;
-  setup?(context: { config: OutsmartlyConfig; messageBus: MessageBus }): void;
+  setup?(context: { config: OutsmartlyConfig; messageBus: EdgeMessageBus }): void;
 }
 
 export interface OutsmartlyConfig {

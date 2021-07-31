@@ -1,7 +1,10 @@
 import { MessageBus, MessageBusListener, MessageBusOptions } from './MessageBus';
 import { MessageBusMessage } from './MessageBusMessage';
+import { MessageDataByType } from './MessageDataByType';
 import { OutsmartlyClientMessageEvent } from './OutsmartlyEvent';
 import { OutsmartlyClientVisitor } from './types';
+
+export type ClientMessageBusListener<T extends string, D> = MessageBusListener<OutsmartlyClientMessageEvent<T, D>>;
 
 export class ClientMessageBus extends MessageBus {
   constructor(protected _visitor: OutsmartlyClientVisitor, options?: MessageBusOptions) {
@@ -25,10 +28,34 @@ export class ClientMessageBus extends MessageBus {
   }
 
   protected override _notifyListener(
-    listener: MessageBusListener<string, unknown>,
+    listener: ClientMessageBusListener<string, unknown>,
     message: MessageBusMessage<string, unknown>,
   ): void {
     const event = new OutsmartlyClientMessageEvent(this, this._visitor, message);
     this._waitUntil(listener(event));
   }
+}
+
+export interface ClientMessageBus extends MessageBus {
+  on<T extends keyof MessageDataByType>(type: T, callback: ClientMessageBusListener<T, MessageDataByType[T]>): this;
+  on<T extends string, D = unknown>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: ClientMessageBusListener<T, D>,
+  ): this;
+  on(type: string, callback: ClientMessageBusListener<any, any>): this;
+
+  off<T extends keyof MessageDataByType>(type: T, callback: ClientMessageBusListener<T, MessageDataByType[T]>): this;
+  off<T extends string, D = unknown>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: ClientMessageBusListener<T, D>,
+  ): this;
+
+  once<T extends keyof MessageDataByType>(type: T, callback: ClientMessageBusListener<T, MessageDataByType[T]>): this;
+  once<T extends string, D = unknown>(
+    type: T extends keyof MessageDataByType ? never : T,
+    callback: ClientMessageBusListener<T, D>,
+  ): this;
+
+  emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
+  emit<T extends string, D = unknown>(type: T extends keyof MessageDataByType ? never : T, data: D): this;
 }

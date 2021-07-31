@@ -15,9 +15,6 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "types": ["@types/jest", "@types/node"],
-    "outDir": "dist/",
-    "paths": {
-      "~/*": ["./*"]
-    }
+    "outDir": "dist/"
   }
 }

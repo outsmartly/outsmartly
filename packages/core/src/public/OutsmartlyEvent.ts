@@ -3,6 +3,7 @@ import { OutsmartlyCookies, OutsmartlyReadonlyCookies } from './OutsmartlyCookie
 import { MessageBus } from './MessageBus';
 import { MessageBusMessage } from './MessageBusMessage';
 import { ClientMessageBus } from './ClientMessageBus';
+import { EdgeMessageBus } from './EdgeMessageBus';
 
 export abstract class OutsmartlyEvent extends Event {
   abstract messageBus: MessageBus;
@@ -39,7 +40,7 @@ export declare abstract class OutsmartlyEdgeEvent extends OutsmartlyEvent {
 }
 
 export declare abstract class OutsmartlyEdgeRequestEvent extends OutsmartlyEdgeEvent {
-  override get messageBus(): MessageBus;
+  override get messageBus(): EdgeMessageBus;
   override get visitor(): OutsmartlyEdgeVisitor;
   get request(): OutsmartlyRequest;
   get url(): URL;
