@@ -1,5 +1,5 @@
 import { ClientMessageBus } from './ClientMessageBus';
-import { MessageBus, MessageBusOptions } from './MessageBus';
+import { MessageBusOptions } from './MessageBus';
 import { OutsmartlyClientVisitor } from './types';
 
 // Lazily creating as a micro-optimization for initial bundle evaluation.
@@ -14,7 +14,7 @@ let messageBus: ClientMessageBus | undefined;
  * Custom hook that decouples importing the client-side message bus from its
  * use by consumers. Allows us to add functionality to all instances.
  */
-export function useMessageBus(options?: MessageBusOptions): MessageBus {
+export function useMessageBus(options?: MessageBusOptions): ClientMessageBus {
   if (!messageBus) {
     const visitor: OutsmartlyClientVisitor = {
       id: getVisitorId(),
