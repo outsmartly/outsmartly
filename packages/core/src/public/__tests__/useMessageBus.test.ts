@@ -10,7 +10,7 @@ function clearAllCookies() {
   }
 }
 
-describe.only('useMessageBus()', () => {
+describe('useMessageBus()', () => {
   let useMessageBus: typeof useMessageBusType;
 
   beforeEach(async () => {
