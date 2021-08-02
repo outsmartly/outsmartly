@@ -16,6 +16,6 @@
   "main": "./src/index.js",
   "scripts": {},
   "dependencies": {
-    "@outsmartly/core": "0.0.1"
+    "@outsmartly/core": "0.0.2"
   }
 }

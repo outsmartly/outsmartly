@@ -32,12 +32,12 @@ export function limespotPlugin(): Plugin {
       );
 
       messageBus.on(
-        'itemTimeSpend',
+        'productTimeSpend',
         createMessageListener((message) => ({
           ActivityTime: message.data.timestamp,
           Event: eventTypeMap['itemTimeSpend'],
           IntData: message.data.integerData,
-          ReferenceIdentifier: message.data.productId,
+          ReferenceIdentifier: message.data.id,
           ScreenResolution: message.data.resolution,
           // Source: standardizeSource(message.data.referComponent),
           // SourcePage: standardizeSourcePage(message.data.referPage),
@@ -62,7 +62,7 @@ export function limespotPlugin(): Plugin {
           ActivityTime: message.data.timestamp,
           Event: eventTypeMap['collectionTimeSpend'],
           IntData: message.data.integerData,
-          ReferenceIdentifier: message.data.collectionId,
+          ReferenceIdentifier: message.data.id,
           ScreenResolution: message.data.resolution,
           Source: 'StandardNavigation',
           SourcePage: 'Unknown',
