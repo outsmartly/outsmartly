@@ -13,9 +13,20 @@
     "url": "ssh://git@github.com/outsmartly/outsmartly.git",
     "directory": "packages/plugin-limespot"
   },
-  "main": "./src/index.js",
-  "scripts": {},
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
   "dependencies": {
     "@outsmartly/core": "0.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.4",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.5.5",
+    "typescript": "^4.3.5"
   }
 }
