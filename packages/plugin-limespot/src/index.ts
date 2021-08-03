@@ -1,4 +1,4 @@
-import { Plugin } from '@outsmartly/core';
+import { Plugin, OutsmartlyEdgeMessageEvent, EdgeMessageBusListener } from '@outsmartly/core';
 
 /**
  * A custom Outsmartly plugin that attaches listeners for various message types
@@ -9,48 +9,49 @@ export function limespotPlugin(): Plugin {
     setup: ({ config, messageBus }) => {
       messageBus.on(
         'boxRender',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: `${eventTypeMap['boxRender']}RecommendationsRendered`,
-          IntData: message.data.integerData,
-          ScreenResolution: message.data.resolution,
-          Source: standardizeSource(message.data.boxKey),
-          SourcePage: standardizeSourcePage(message.data.page),
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: `${data.boxKey}RecommendationsRendered`,
+          IntData: data.integerData,
+          ScreenResolution: data.resolution,
+          // Source: standardizeSource(data.referComponent),
+          // SourcePage: standardizeSourcePage(data.referPage),
         })),
       );
 
       messageBus.on(
-        'itemView',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: eventTypeMap['itemView'],
-          ReferenceIdentifier: message.data.productId,
-          ScreenResolution: message.data.resolution,
-          // Source: standardizeSource(message.data.referComponent),
-          // SourcePage: standardizeSourcePage(message.data.referPage),
+        'productView',
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'ItemView',
+          ReferenceIdentifier: data.id,
+          ScreenResolution: data.resolution,
+          // Source: standardizeSource(data.referComponent),
+          // SourcePage: standardizeSourcePage(data.referPage),
         })),
       );
 
       messageBus.on(
         'productTimeSpend',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: eventTypeMap['itemTimeSpend'],
-          IntData: message.data.integerData,
-          ReferenceIdentifier: message.data.id,
-          ScreenResolution: message.data.resolution,
-          // Source: standardizeSource(message.data.referComponent),
-          // SourcePage: standardizeSourcePage(message.data.referPage),
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'ItemTimeSpend',
+          IntData: data.integerData,
+          ReferenceIdentifier: data.id,
+          ScreenResolution: data.resolution,
+          // Source: standardizeSource(data.referComponent),
+          // SourcePage: standardizeSourcePage(data.referPage),
         })),
       );
 
       messageBus.on(
         'collectionView',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: eventTypeMap['collectionView'],
-          ReferenceIdentifier: message.data.collectionId,
-          ScreenResolution: message.data.resolution,
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'CollectionView',
+          IntData: data.integerData,
+          ReferenceIdentifier: data.id,
+          ScreenResolution: data.resolution,
           Source: 'StandardNavigation',
           SourcePage: 'Collection',
         })),
@@ -58,12 +59,12 @@ export function limespotPlugin(): Plugin {
 
       messageBus.on(
         'collectionTimeSpend',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: eventTypeMap['collectionTimeSpend'],
-          IntData: message.data.integerData,
-          ReferenceIdentifier: message.data.id,
-          ScreenResolution: message.data.resolution,
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'CollectionTimeSpend',
+          IntData: data.integerData,
+          ReferenceIdentifier: data.id,
+          ScreenResolution: data.resolution,
           Source: 'StandardNavigation',
           SourcePage: 'Unknown',
         })),
@@ -71,14 +72,14 @@ export function limespotPlugin(): Plugin {
 
       messageBus.on(
         'variantAddToCart',
-        createMessageListener((message) => ({
-          ActivityTime: message.data.timestamp,
-          Event: eventTypeMap['variantAddToCart'],
-          IntData: message.data.integerData,
-          ReferenceIdentifier: message.data.variantId,
-          ScreenResolution: message.data.resolution,
-          // Source: standardizeSource(message.data.source),
-          // SourcePage: standardizeSourcePage(message.data.sourcePage),
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'ProductVariantAddToCart',
+          IntData: data.integerData,
+          ReferenceIdentifier: data.id,
+          ScreenResolution: data.resolution,
+          // Source: standardizeSource(data.referComponent),
+          // SourcePage: standardizeSourcePage(data.referPage),
           // Source: 'StandardNavigation',
           // SourcePage: 'collection',
           // Source: 'CrossSell',
@@ -90,47 +91,190 @@ export function limespotPlugin(): Plugin {
 
       messageBus.on(
         'cartTimeSpend',
-        createMessageListener((message) => ({
-          // ActivityTime: message.data.timestamp,
-          // Event: eventTypeMap['cartTimeSpend'],
-          // IntData: message.data.integerData,
-          // ReferenceIdentifier: message.data.productId,
-          // ScreenResolution: message.data.resolution,
-          //Source: standardizeSource(message.data.source),
-          //SourcePage: standardizeSourcePage(message.data.sourcePage),
+        createMessageListener((data) => ({
+          ActivityTime: data.timestamp,
+          Event: 'CartTimeSpent',
+          IntData: data.integerData,
+          ScreenResolution: data.resolution,
+          //Source: standardizeSource(data.referComponent),
+          //SourcePage: standardizeSourcePage(data.referPage),
         })),
       );
     },
   } as Plugin;
 }
 
+// Add overloads on top of what is provided in core.
+declare module '@outsmartly/core' {
+  // A keyed collection of additional input types (i.e., properties on the
+  // events we emit that this Limespot plugin needs to listen for)
+  type NewMessageDataByType = {
+    boxRender: {
+      boxKey: string;
+      integerData: number;
+      resolution: string;
+      timestamp: string;
+      // referComponent: string;
+      // referPage: string;
+    };
+    productView: {
+      id: string;
+      resolution: string;
+      timestamp: string;
+      // referComponent: string;
+      // referPage: string;
+    };
+    productTimeSpend: {
+      id: string;
+      integerData: number;
+      resolution: string;
+      timestamp: string;
+      // referComponent: string;
+      // referPage: string;
+    };
+    collectionView: {
+      integerData: number;
+      id: string;
+      resolution: string;
+      timestamp: string;
+    };
+    collectionTimeSpend: {
+      integerData: number;
+      id: string;
+      resolution: string;
+      timestamp: string;
+    };
+    variantAddToCart: {
+      integerData: number;
+      id: string;
+      resolution: string;
+      timestamp: string;
+      // referComponent: string;
+      // referPage: string;
+    };
+    cartTimeSpend: {
+      integerData: number;
+      resolution: string;
+      timestamp: string;
+      // referComponent: string;
+      // referPage: string;
+    };
+  };
+
+  // Get the keys of the above collection
+  interface EdgeMessageBus {
+    on<T extends keyof NewMessageDataByType>(
+      type: T,
+      callback: EdgeMessageBusListener<T, NewMessageDataByType[T]>,
+    ): this;
+  }
+}
+
+// Output types (i.e., properties Limespot is expecting for each event)
+interface LimespotRecommendationsRendered {
+  ActivityTime: string;
+  Event: string;
+  IntData: number;
+  ScreenResolution: string;
+  // Source: string;
+  // SourcePage: string;
+}
+
+interface LimespotItemView {
+  ActivityTime: string;
+  Event: 'ItemView';
+  ReferenceIdentifier: string;
+  ScreenResolution: string;
+  // Source: string;
+  // SourcePage: string;
+}
+
+interface LimespotItemTimeSpend {
+  ActivityTime: string;
+  Event: 'ItemTimeSpend';
+  IntData: number;
+  ReferenceIdentifier: string;
+  ScreenResolution: string;
+  // Source: string;
+  // SourcePage: string;
+}
+
+interface LimespotCollectionView {
+  ActivityTime: string;
+  Event: 'CollectionView';
+  ReferenceIdentifier: string;
+  ScreenResolution: string;
+  Source: string;
+  SourcePage: string;
+}
+
+interface LimespotCollectionTimeSpend {
+  ActivityTime: string;
+  Event: 'CollectionTimeSpend';
+  IntData: number;
+  ReferenceIdentifier: string;
+  ScreenResolution: string;
+  Source: string;
+  SourcePage: string;
+}
+
+interface LimespotVariantAddToCart {
+  ActivityTime: string;
+  Event: 'ProductVariantAddToCart';
+  IntData: number;
+  ReferenceIdentifier: string;
+  ScreenResolution: string;
+  // Source: string;
+  // SourcePage: string;
+}
+
+interface LimespotCartTimeSpent {
+  ActivityTime: string;
+  Event: 'CartTimeSpent';
+  IntData: number;
+  ScreenResolution: string;
+  // Source: string;
+  // SourcePage: string;
+}
+
+// Union of all output types
+type LimespotEvent =
+  | LimespotRecommendationsRendered
+  | LimespotItemView
+  | LimespotItemTimeSpend
+  | LimespotCollectionView
+  | LimespotCollectionTimeSpend
+  | LimespotVariantAddToCart
+  | LimespotCartTimeSpent;
+
+// An array to hold a batch of activities
+const bufferedLimespotEvents: LimespotEvent[] = [];
+
 /**
  * Creates listener functions that return data in the format needed.
  */
-function createMessageListener(mapper) {
+function createMessageListener<T extends string, D>(mapper: (data: D) => LimespotEvent) {
   // `event` will be an OutsmartlyEvent
-  return async (event) => {
+  return async (event: OutsmartlyEdgeMessageEvent<T, D>): Promise<void> => {
     const contextId = event.cookies.get('lsContextID');
     if (!contextId) {
       throw new Error(`Missing contextId`);
     }
-    const formattedLimespotEvent = mapper(event.message);
+    const formattedLimespotEvent = mapper(event.message.data);
     bufferedLimespotEvents.push(formattedLimespotEvent);
     // Hey, just wait for a while, while other messages are added
     await scheduleBatchSend(contextId);
   };
 }
 
-// An array to hold a batch of activities
-const bufferedLimespotEvents = [];
 let isThrottling = false;
 
 /**
  * Schedules the array/batch of activities to be sent
  */
-function scheduleBatchSend(contextId: string) {
+function scheduleBatchSend(contextId: string): Promise<void> {
   if (isThrottling) {
-    return;
+    return new Promise<void>(() => {});
   }
   isThrottling = true;
   return new Promise<void>((resolve) => {
@@ -148,7 +292,7 @@ function scheduleBatchSend(contextId: string) {
 /**
  * Prepares and sends a request to Limespot's activityLogs endpoint
  */
-async function logActivityBatch(contextID: string, payload: string) {
+async function logActivityBatch(contextID: string, payload: string): Promise<void> {
   // Prepare the request
   const prefix = 'https://storefront.personalizer.io/v1';
   const resource = `${prefix}/activityLogs`;
@@ -175,7 +319,7 @@ async function logActivityBatch(contextID: string, payload: string) {
 /**
  * Standardize source string
  */
-function standardizeSource(component) {
+function standardizeSource(component?: string): string {
   if (typeof component === 'undefined' || !sourceStringMap[component]) {
     return 'Standard Navigation';
   }
@@ -185,7 +329,7 @@ function standardizeSource(component) {
 /**
  * Standardize source page string
  */
-function standardizeSourcePage(pageStr) {
+function standardizeSourcePage(pageStr: string) {
   if (typeof pageStr === 'undefined') return 'Unknown';
   return upper1stChar(pageStr);
 }
@@ -198,19 +342,8 @@ export function upper1stChar(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Map of event types
-const eventTypeMap = {
-  boxRender: 'RecommendationsRendered',
-  itemView: 'ItemView',
-  itemTimeSpend: 'ItemTimeSpend',
-  collectionView: 'CollectionView',
-  collectionTimeSpend: 'CollectionTimeSpend',
-  variantAddToCart: 'ProductVariantAddToCart',
-  cartTimeSpend: 'CartTimeSpent',
-};
-
 // Map of source strings
-const sourceStringMap = {
+const sourceStringMap: { [key: string]: string } = {
   related: 'Related',
   crosssell: 'CrossSell',
   upsell: 'Upsell',
