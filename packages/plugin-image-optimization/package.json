@@ -14,7 +14,10 @@
     "directory": "packages/plugin-image-optimization"
   },
   "main": "./src/index.js",
-  "scripts": {},
+  "scripts": {
+    "build": "echo 'plugin-image-optimization: no build required.'",
+    "test": "echo 'plugin-image-optimization: no tests available.'"
+  },
   "dependencies": {
     "regenerator-runtime": "*"
   }

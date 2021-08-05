@@ -1,0 +1,22 @@
+name: CI
+on:
+  - push
+  - pull_request
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '15.x'
+      - name: Install npm v7
+        run: npm install -g npm@latest
+      - name: Install dependencies
+        run: npm install
+      - name: Build artifacts
+        run: npm run build
+      - name: Run tests
+        run: npm run test
