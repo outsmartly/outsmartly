@@ -7,7 +7,7 @@ export { ClientMessageBus, ClientMessageBusListener } from './public/ClientMessa
 export { EdgeMessageBus, EdgeMessageBusListener } from './public/EdgeMessageBus';
 
 // Cookies
-export { OutsmartlyCookies, OutsmartlyReadonlyCookies, OutsmartlySetCookieOptions } from './public/OutsmartlyCookies';
+export { OutsmartlyReadonlyCookies, OutsmartlyCookies, SetCookieOptions } from './public/OutsmartlyCookies';
 
 // Events
 export {
