@@ -49,7 +49,6 @@ export function limespotPlugin(): Plugin {
         createMessageListener((data) => ({
           ActivityTime: data.timestamp,
           Event: 'CollectionView',
-          IntData: data.integerData,
           ReferenceIdentifier: data.id,
           ScreenResolution: data.resolution,
           Source: 'StandardNavigation',
@@ -274,7 +273,7 @@ let isThrottling = false;
  */
 function scheduleBatchSend(contextId: string): Promise<void> {
   if (isThrottling) {
-    return new Promise<void>(() => {});
+    return Promise.resolve();
   }
   isThrottling = true;
   return new Promise<void>((resolve) => {
