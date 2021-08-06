@@ -12,6 +12,7 @@ export { OutsmartlyReadonlyCookies, OutsmartlyCookies, SetCookieOptions } from '
 // Events
 export {
   OutsmartlyEvent,
+  OutsmartlyMessageEvent,
   OutsmartlyClientEvent,
   OutsmartlyClientMessageEvent,
   OutsmartlyEdgeEvent,
