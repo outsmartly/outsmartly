@@ -184,7 +184,7 @@ describe('Limespot plugin', () => {
     });
   });
 
-  test('an "CollectionView" event is logged  when a "collectionView" event is emitted', (done) => {
+  test('a "CollectionView" event is logged  when a "collectionView" event is emitted', (done) => {
     expect.assertions(2);
     const obj = {
       id: '222000999',
@@ -211,7 +211,7 @@ describe('Limespot plugin', () => {
     });
   });
 
-  test('an "CollectionTimeSpend" event is logged when a "collectionTimeSpend" event is emitted', (done) => {
+  test('a "CollectionTimeSpend" event is logged when a "collectionTimeSpend" event is emitted', (done) => {
     expect.assertions(2);
     const obj = {
       id: '222000999',
@@ -229,6 +229,58 @@ describe('Limespot plugin', () => {
       ScreenResolution: obj.resolution,
       Source: 'StandardNavigation',
       SourcePage: 'Unknown',
+    };
+    buffer.push(payload);
+    const url = getUrl(dateNowSpy());
+    const options = getOptions(contextId, buffer);
+    queueMicrotask(() => {
+      expect(fetchMock).toBeCalledTimes(1);
+      expect(fetchMock).toBeCalledWith(url, options);
+      done();
+    });
+  });
+
+  test('a "ProductVariantAddToCart" event is logged when a "variantAddToCart" event is emitted', (done) => {
+    expect.assertions(2);
+    const obj = {
+      id: '333399995555',
+      integerData: 1,
+      resolution: '1980 x 1200',
+      timestamp: new Date().toISOString(),
+    };
+    messageBus.emit('variantAddToCart', obj);
+    const buffer: Object[] = [];
+    const payload = {
+      ActivityTime: obj.timestamp,
+      Event: 'ProductVariantAddToCart',
+      IntData: obj.integerData,
+      ReferenceIdentifier: obj.id,
+      ScreenResolution: obj.resolution,
+    };
+    buffer.push(payload);
+    const url = getUrl(dateNowSpy());
+    const options = getOptions(contextId, buffer);
+    queueMicrotask(() => {
+      expect(fetchMock).toBeCalledTimes(1);
+      expect(fetchMock).toBeCalledWith(url, options);
+      done();
+    });
+  });
+
+  test('a "CartTimeSpent" event is logged when a "cartTimeSpend" event is emitted', (done) => {
+    expect.assertions(2);
+    const obj = {
+      integerData: 18999,
+      resolution: '1980 x 1200',
+      timestamp: new Date().toISOString(),
+    };
+    messageBus.emit('cartTimeSpend', obj);
+    const buffer: Object[] = [];
+    const payload = {
+      ActivityTime: obj.timestamp,
+      Event: 'CartTimeSpent',
+      IntData: obj.integerData,
+      ScreenResolution: obj.resolution,
     };
     buffer.push(payload);
     const url = getUrl(dateNowSpy());
