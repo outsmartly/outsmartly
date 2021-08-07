@@ -156,4 +156,31 @@ describe('Limespot plugin', () => {
       done();
     });
   });
+
+  it('logs an "ItemTimeSpend" event when a "productTimeSpend" event is emitted', (done) => {
+    expect.assertions(2);
+    const obj = {
+      id: '444555666',
+      integerData: 20999,
+      resolution: '1980 x 1200',
+      timestamp: new Date().toISOString(),
+    };
+    messageBus.emit('productTimeSpend', obj);
+    const buffer: Object[] = [];
+    const payload = {
+      ActivityTime: obj.timestamp,
+      Event: 'ItemTimeSpend',
+      IntData: obj.integerData,
+      ReferenceIdentifier: obj.id,
+      ScreenResolution: obj.resolution,
+    };
+    buffer.push(payload);
+    const url = getUrl(dateNowSpy());
+    const options = getOptions(contextId, buffer);
+    queueMicrotask(() => {
+      expect(fetchMock).toBeCalledTimes(1);
+      expect(fetchMock).toBeCalledWith(url, options);
+      done();
+    });
+  });
 });
