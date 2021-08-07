@@ -94,7 +94,7 @@ describe('Limespot plugin', () => {
     fetchMock.mockRestore();
   });
 
-  it('logs a "<Box>RecommendationsRendered" event when a "boxRender" event is emitted', (done) => {
+  test('a "<Box>RecommendationsRendered" event is logged when a "boxRender" event is emitted', (done) => {
     expect.assertions(2);
 
     // Input
@@ -132,7 +132,7 @@ describe('Limespot plugin', () => {
     });
   });
 
-  it('logs an "ItemView" event when a "productView" event is emitted', (done) => {
+  test('an "ItemView" event is logged when a "productView" event is emitted', (done) => {
     expect.assertions(2);
     const obj = {
       id: '444555666',
@@ -157,7 +157,7 @@ describe('Limespot plugin', () => {
     });
   });
 
-  it('logs an "ItemTimeSpend" event when a "productTimeSpend" event is emitted', (done) => {
+  test('an "ItemTimeSpend" event is logged when a "productTimeSpend" event is emitted', (done) => {
     expect.assertions(2);
     const obj = {
       id: '444555666',
@@ -173,6 +173,62 @@ describe('Limespot plugin', () => {
       IntData: obj.integerData,
       ReferenceIdentifier: obj.id,
       ScreenResolution: obj.resolution,
+    };
+    buffer.push(payload);
+    const url = getUrl(dateNowSpy());
+    const options = getOptions(contextId, buffer);
+    queueMicrotask(() => {
+      expect(fetchMock).toBeCalledTimes(1);
+      expect(fetchMock).toBeCalledWith(url, options);
+      done();
+    });
+  });
+
+  test('an "CollectionView" event is logged  when a "collectionView" event is emitted', (done) => {
+    expect.assertions(2);
+    const obj = {
+      id: '222000999',
+      resolution: '1980 x 1200',
+      timestamp: new Date().toISOString(),
+    };
+    messageBus.emit('collectionView', obj);
+    const buffer: Object[] = [];
+    const payload = {
+      ActivityTime: obj.timestamp,
+      Event: 'CollectionView',
+      ReferenceIdentifier: obj.id,
+      ScreenResolution: obj.resolution,
+      Source: 'StandardNavigation',
+      SourcePage: 'Collection',
+    };
+    buffer.push(payload);
+    const url = getUrl(dateNowSpy());
+    const options = getOptions(contextId, buffer);
+    queueMicrotask(() => {
+      expect(fetchMock).toBeCalledTimes(1);
+      expect(fetchMock).toBeCalledWith(url, options);
+      done();
+    });
+  });
+
+  test('an "CollectionTimeSpend" event is logged when a "collectionTimeSpend" event is emitted', (done) => {
+    expect.assertions(2);
+    const obj = {
+      id: '222000999',
+      integerData: 20999,
+      resolution: '1980 x 1200',
+      timestamp: new Date().toISOString(),
+    };
+    messageBus.emit('collectionTimeSpend', obj);
+    const buffer: Object[] = [];
+    const payload = {
+      ActivityTime: obj.timestamp,
+      Event: 'CollectionTimeSpend',
+      IntData: obj.integerData,
+      ReferenceIdentifier: obj.id,
+      ScreenResolution: obj.resolution,
+      Source: 'StandardNavigation',
+      SourcePage: 'Unknown',
     };
     buffer.push(payload);
     const url = getUrl(dateNowSpy());
