@@ -117,7 +117,7 @@ describe('Limespot plugin', () => {
     notifyListener.mockRestore();
   });
 
-  test('a "<Box>RecommendationsRendered" event is logged when a "boxRender" event is emitted', async () => {
+  it('logs a "<Box>RecommendationsRendered" event when a "boxRender" event is emitted', async () => {
     const input = {
       boxKey: 'Trending',
       integerData: 20,
@@ -143,169 +143,166 @@ describe('Limespot plugin', () => {
     });
   });
 
-  /*
-  test('an "ItemView" event is logged when a "productView" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs an "ItemView" event when a "productView" event is emitted', async () => {
+    const input = {
       id: '444555666',
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('productView', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'ItemView',
-      ReferenceIdentifier: obj.id,
-      ScreenResolution: obj.resolution,
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'productView',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'ItemView',
+          ReferenceIdentifier: input.id,
+          ScreenResolution: input.resolution,
+        },
+      ],
     });
   });
 
-  test('an "ItemTimeSpend" event is logged when a "productTimeSpend" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs an "ItemTimeSpend" event when a "productTimeSpend" event is emitted', async () => {
+    const input = {
       id: '444555666',
       integerData: 20999,
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('productTimeSpend', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'ItemTimeSpend',
-      IntData: obj.integerData,
-      ReferenceIdentifier: obj.id,
-      ScreenResolution: obj.resolution,
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'productTimeSpend',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'ItemTimeSpend',
+          IntData: input.integerData,
+          ReferenceIdentifier: input.id,
+          ScreenResolution: input.resolution,
+        },
+      ],
     });
   });
 
-  test('a "CollectionView" event is logged  when a "collectionView" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs a "CollectionView" event when a "collectionView" event is emitted', async () => {
+    const input = {
       id: '222000999',
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('collectionView', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'CollectionView',
-      ReferenceIdentifier: obj.id,
-      ScreenResolution: obj.resolution,
-      Source: 'StandardNavigation',
-      SourcePage: 'Collection',
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'collectionView',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'CollectionView',
+          ReferenceIdentifier: input.id,
+          ScreenResolution: input.resolution,
+          Source: 'StandardNavigation',
+          SourcePage: 'Collection',
+        },
+      ],
     });
   });
 
-  test('a "CollectionTimeSpend" event is logged when a "collectionTimeSpend" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs a "CollectionTimeSpend" event when a "collectionTimeSpend" event is emitted', async () => {
+    const input = {
       id: '222000999',
       integerData: 20999,
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('collectionTimeSpend', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'CollectionTimeSpend',
-      IntData: obj.integerData,
-      ReferenceIdentifier: obj.id,
-      ScreenResolution: obj.resolution,
-      Source: 'StandardNavigation',
-      SourcePage: 'Unknown',
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'collectionTimeSpend',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'CollectionTimeSpend',
+          IntData: input.integerData,
+          ReferenceIdentifier: input.id,
+          ScreenResolution: input.resolution,
+          Source: 'StandardNavigation',
+          SourcePage: 'Unknown',
+        },
+      ],
     });
   });
 
-  test('a "ProductVariantAddToCart" event is logged when a "variantAddToCart" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs a "ProductVariantAddToCart" event when a "variantAddToCart" event is emitted', async () => {
+    const input = {
       id: '333399995555',
       integerData: 1,
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('variantAddToCart', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'ProductVariantAddToCart',
-      IntData: obj.integerData,
-      ReferenceIdentifier: obj.id,
-      ScreenResolution: obj.resolution,
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'variantAddToCart',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'ProductVariantAddToCart',
+          IntData: input.integerData,
+          ReferenceIdentifier: input.id,
+          ScreenResolution: input.resolution,
+        },
+      ],
     });
   });
 
-  test('a "CartTimeSpent" event is logged when a "cartTimeSpend" event is emitted', (done) => {
-    expect.assertions(2);
-    const obj = {
+  it('logs a "CartTimeSpent" event when a "cartTimeSpend" event is emitted', async () => {
+    const input = {
       integerData: 18999,
       resolution: '1980 x 1200',
       timestamp: new Date().toISOString(),
     };
-    messageBus.emit('cartTimeSpend', obj);
-    const buffer: Object[] = [];
-    const payload = {
-      ActivityTime: obj.timestamp,
-      Event: 'CartTimeSpent',
-      IntData: obj.integerData,
-      ScreenResolution: obj.resolution,
-    };
-    buffer.push(payload);
-    const url = getUrl(dateNowSpy());
-    const options = getOptions(contextId, buffer);
-    queueMicrotask(() => {
-      expect(fetchMock).toBeCalledTimes(1);
-      expect(fetchMock).toBeCalledWith(url, options);
-      done();
+    await expectPluginInputOutput({
+      input: [
+        {
+          type: 'cartTimeSpend',
+          data: input,
+        },
+      ],
+      output: [
+        {
+          ActivityTime: input.timestamp,
+          Event: 'CartTimeSpent',
+          IntData: input.integerData,
+          ScreenResolution: input.resolution,
+        },
+      ],
     });
   });
-  */
 
-  test('multiple activities are logged when multiple events are emitted', async () => {
+  it('logs multiple activities when multiple events are emitted', async () => {
     const input1 = {
       id: '444555888',
       integerData: 20999,
@@ -379,7 +376,3 @@ describe('Limespot plugin', () => {
     });
   });
 });
-
-function lg(data: any, label = 'Data') {
-  console.log('-------- Hello -------- \n', `${label} is`, data);
-}
