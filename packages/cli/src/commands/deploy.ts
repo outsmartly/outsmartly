@@ -179,7 +179,7 @@ export default class Deploy extends Command {
   abortController = new AbortController();
   spinner = ora();
 
-  async findBearerToken(flags: any): string {
+  async findBearerToken(flags: any): Promise<string> {
     const { token: bearerTokenOverride } = flags;
     const configFilePath = path.join(os.homedir(), '.config', 'outsmartly', 'config.json');
 
@@ -188,9 +188,9 @@ export default class Deploy extends Command {
       const answers = await prompt({
         type: 'input',
         name: 'bearerToken',
-        message: "Paste your access token: (don't have one? visit https://www.outsmartly.com/signup)",
+        message: 'Paste your access token: ',
         validate(bearerToken) {
-          if (!bearerToken || bearerToken.length < 36) {
+          if (!bearerToken || typeof bearerToken !== 'string' || bearerToken.length < 36) {
             throw "That doesn't seem to be a valid access token. If you're having trouble, contact support@outsmartly.com.";
           }
           return true;
@@ -210,6 +210,8 @@ export default class Deploy extends Command {
         console.error(e);
       }
     }
+
+    return bearerToken;
   }
 
   async run() {
@@ -235,7 +237,7 @@ export default class Deploy extends Command {
           return;
         }
 
-        await this.deploy(bearerToken!, environment, configPath, watch);
+        await this.deploy(bearerToken, environment, configPath, watch);
       });
     }
 

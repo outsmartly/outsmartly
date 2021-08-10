@@ -13,4 +13,3 @@ or you can watch for file changes:
 ```text
 outsmartly deploy <ENVIRONMENT> --watch
 ```
-

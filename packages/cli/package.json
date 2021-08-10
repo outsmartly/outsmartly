@@ -1,7 +1,7 @@
 {
   "name": "@outsmartly/cli",
   "description": "Command Line Interface for Outsmartly.",
-  "version": "0.0.74",
+  "version": "0.0.75",
   "license": "MIT",
   "bin": {
     "outsmartly": "bin/outsmartly"
@@ -80,6 +80,7 @@
     "@oclif/test": "^1",
     "@types/fs-extra": "^9.0.12",
     "@types/inquirer": "^7.3.1",
+    "@types/node": "^16.4.13",
     "@types/node-fetch": "^2.5.7",
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",
