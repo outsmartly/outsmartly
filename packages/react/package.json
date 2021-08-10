@@ -26,7 +26,7 @@
   "scripts": {
     "start": "jay-scripts start",
     "build": "jay-scripts build",
-    "test": "jay-scripts test",
+    "test": "echo 'react: no tests available.'",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {

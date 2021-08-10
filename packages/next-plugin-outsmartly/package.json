@@ -13,6 +13,10 @@
     "url": "ssh://git@github.com/outsmartly/outsmartly.git",
     "directory": "packages/next-plugin-outsmartly"
   },
+  "scripts": {
+    "build": "echo 'next-plugin-outsmartly: no build required.'",
+    "test": "echo 'next-plugin-outsmartly: no tests available.'"
+  },
   "peerDependencies": {
     "next": "*"
   },

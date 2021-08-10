@@ -13,6 +13,10 @@
     "url": "ssh://git@github.com/outsmartly/outsmartly.git",
     "directory": "packages/gatsby-plugin-outsmartly"
   },
+  "scripts": {
+    "build": "echo 'gatsby-plugin-outsmartly: no build required.'",
+    "test": "echo 'gatsby-plugin-outsmartly: no tests available.'"
+  },
   "peerDependencies": {
     "gatsby": "*"
   },

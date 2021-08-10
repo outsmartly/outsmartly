@@ -21,16 +21,19 @@
     "./packages/*"
   ],
   "scripts": {
-    "build": "ultra --recursive build",
-    "test": "ultra --recursive test",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "format": "prettier --write '**/*.{ts,tsx,js,mjs,css,json,md}'",
     "syncpack": "syncpack fix-mismatches",
-    "lerna:publish": "lerna publish --exact"
+    "clean": "git clean -fdX"
   },
   "devDependencies": {
     "@jayphelps/jay-scripts": "^0.0.50",
-    "lerna": "^4.0.0",
-    "npm-publish-all": "^0.0.3",
     "prettier": "^2.3.2",
     "syncpack": "^5.6.10"
+  },
+  "dependencies": {
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.13"
   }
 }
