@@ -29,11 +29,13 @@
   },
   "devDependencies": {
     "@jayphelps/jay-scripts": "^0.0.50",
+    "@types/jest": "^27.0.0",
+    "@types/node": "^16.4.13",
+    "@types/sinon": "^10.0.2",
+    "jest": "^27.0.6",
     "prettier": "^2.3.2",
-    "syncpack": "^5.6.10"
-  },
-  "dependencies": {
-    "@types/jest": "^26.0.24",
-    "@types/node": "^16.4.13"
+    "syncpack": "^5.6.10",
+    "ts-jest": "^27.0.4",
+    "typescript": "^4.3.5"
   }
 }

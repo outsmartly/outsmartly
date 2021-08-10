@@ -1,0 +1,20 @@
+{
+  "include": ["./src/**/*.ts", "./types/**/*.ts"],
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "commonjs",
+    "lib": ["ESNext", "WebWorker"],
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "strict": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "types": ["@types/jest"],
+    "outDir": "dist/",
+    "skipLibCheck": true
+  }
+}

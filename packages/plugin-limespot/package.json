@@ -1,0 +1,30 @@
+{
+  "name": "@outsmartly/plugin-limespot",
+  "version": "0.0.1",
+  "description": "Limespot plugin for Outsmartly",
+  "author": "Outsmartly <support@outsmartly.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/outsmartly/outsmartly/",
+  "bugs": {
+    "url": "https://github.com/outsmartly/outsmartly/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/outsmartly/outsmartly.git",
+    "directory": "packages/plugin-limespot"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@outsmartly/core": "0.0.2"
+  },
+  "devDependencies": {
+    "event-target-polyfill": "^0.0.3",
+    "jest-fetch-mock": "^3.0.3"
+  }
+}
