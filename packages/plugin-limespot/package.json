@@ -24,11 +24,7 @@
     "@outsmartly/core": "0.0.2"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.4",
-    "@types/node": "^14.6.0",
-    "jest": "^26.1.0",
-    "jest-fetch-mock": "^3.0.3",
-    "ts-jest": "^26.5.5",
-    "typescript": "^4.3.5"
+    "event-target-polyfill": "^0.0.3",
+    "jest-fetch-mock": "^3.0.3"
   }
 }
