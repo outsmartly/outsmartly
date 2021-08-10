@@ -10,7 +10,8 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "composite": true
+    "composite": true,
+    "types": ["@types/node", "@types/jest", "@types/fs-extra", "@types/inquirer", "@types/node-fetch"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*"]
 }
