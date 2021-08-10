@@ -5,14 +5,7 @@ import * as vm from 'vm';
 import * as os from 'os';
 import chalk from 'chalk';
 import { prompt } from 'inquirer';
-import {
-  rollup,
-  OutputChunk,
-  RollupError,
-  RollupWarning,
-  RollupCache,
-  RollupBuild,
-} from 'rollup';
+import { rollup, OutputChunk, RollupError, RollupWarning, RollupCache, RollupBuild } from 'rollup';
 import rollupCommonJs from '@rollup/plugin-commonjs';
 import rollupJson from '@rollup/plugin-json';
 import rollupNodeResolve from '@rollup/plugin-node-resolve';
@@ -26,16 +19,10 @@ import { AbortSignal } from 'node-fetch/externals';
 import ora from 'ora';
 import { AbortController } from 'abortcontroller-polyfill/dist/cjs-ponyfill';
 import multiline from 'multiline-template';
-
-import {
-  Analysis,
-  APIError,
-  apiFetch,
-  ComponentAnalysis,
-  patchSite,
-  PatchSite,
-} from '../api';
+import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite } from '../api';
 import { panic } from '../panic';
+
+const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx'];
 
 async function rollupOutsmartlyConfigFile(
   configPath: string,
@@ -72,6 +59,7 @@ async function rollupOutsmartlyConfigFile(
         babelrc: false,
         presets: ['@babel/preset-react', '@babel/preset-typescript'],
         plugins: ['@babel/plugin-proposal-class-properties'],
+        extensions: SUPPORTED_EXTENSIONS,
         include: '**',
         compact: false,
       }),
@@ -102,9 +90,7 @@ async function rollupOutsmartlyConfigFile(
   });
 
   if (output.length !== 1) {
-    throw new Error(
-      `Rollup generate() returned ${output.length} assets, but we expected only 1.`,
-    );
+    throw new Error(`Rollup generate() returned ${output.length} assets, but we expected only 1.`);
   }
 
   const chunk = output[0];
@@ -124,14 +110,10 @@ function relativeId(id: string) {
 
 function handleRollupError(err: RollupWarning, fatal?: false): void;
 function handleRollupError(err: RollupError, fatal?: true): never;
-function handleRollupError(
-  err: RollupWarning | RollupError,
-  fatal = false,
-): never | void {
+function handleRollupError(err: RollupWarning | RollupError, fatal = false): never | void {
   let description = err.message || err;
   if (err.name) description = `${err.name}: ${description}`;
-  const message =
-    (err.plugin ? `(plugin ${err.plugin}) ${description}` : description) || err;
+  const message = (err.plugin ? `(plugin ${err.plugin}) ${description}` : description) || err;
 
   console.error(chalk.bold(chalk.red(`[!] ${chalk.bold(message.toString())}`)));
 
@@ -140,11 +122,7 @@ function handleRollupError(
   }
 
   if (err.loc) {
-    console.error(
-      `${relativeId((err.loc.file || err.id)!)} (${err.loc.line}:${
-        err.loc.column
-      })`,
-    );
+    console.error(`${relativeId((err.loc.file || err.id)!)} (${err.loc.line}:${err.loc.column})`);
   } else if (err.id) {
     console.error(relativeId(err.id));
   }
@@ -161,8 +139,7 @@ function handleRollupError(
 }
 
 export default class Deploy extends Command {
-  static description =
-    'Deploy your Outsmartly configuration from outsmartly.config.js';
+  static description = 'Deploy your Outsmartly configuration from outsmartly.config.js';
 
   static examples = [`$ outsmartly deploy`];
 
@@ -190,8 +167,7 @@ export default class Deploy extends Command {
     {
       name: 'environment',
       required: true,
-      description:
-        "Environment you want to deploy to. Currently only supports 'production'.",
+      description: "Environment you want to deploy to. Currently only supports 'production'.",
       options: ['production'],
     },
   ];
@@ -205,23 +181,14 @@ export default class Deploy extends Command {
 
   async findBearerToken(flags: any): string {
     const { token: bearerTokenOverride } = flags;
-    const configFilePath = path.join(
-      os.homedir(),
-      '.config',
-      'outsmartly',
-      'config.json',
-    );
-    const config = fs.existsSync(configFilePath)
-      ? fs.readFileSync(configFilePath, 'utf-8')
-      : '';
+    const configFilePath = path.join(os.homedir(), '.config', 'outsmartly', 'config.json');
 
     let bearerToken = bearerTokenOverride ?? process.env.OUTSMARTLY_TOKEN;
     if (!bearerToken) {
       const answers = await prompt({
         type: 'input',
         name: 'bearerToken',
-        message:
-          "Paste your access token: (don't have one? visit https://www.outsmartly.com/signup)",
+        message: "Paste your access token: (don't have one? visit https://www.outsmartly.com/signup)",
         validate(bearerToken) {
           if (!bearerToken || bearerToken.length < 36) {
             throw "That doesn't seem to be a valid access token. If you're having trouble, contact support@outsmartly.com.";
@@ -239,9 +206,7 @@ export default class Deploy extends Command {
         const json = JSON.stringify(config, null, 2);
         fs.outputFileSync(configFilePath, json);
       } catch (e) {
-        console.error(
-          `Unable to write outsmartly configuration file to: ${configFilePath}`,
-        );
+        console.error(`Unable to write outsmartly configuration file to: ${configFilePath}`);
         console.error(e);
       }
     }
@@ -311,10 +276,7 @@ export default class Deploy extends Command {
 
       if (fs.existsSync(dependenciesDir)) {
         for (const filename of fs.readdirSync(dependenciesDir)) {
-          const content = fs.readFileSync(
-            path.join(dependenciesDir, filename),
-            'utf-8',
-          );
+          const content = fs.readFileSync(path.join(dependenciesDir, filename), 'utf-8');
           const indexOfFirstNewline = content.indexOf('\n');
           const firstLine = content.slice(0, indexOfFirstNewline);
           const originalRelativePathComment = firstLine.match(/^\/\/ (.+)$/);
@@ -333,18 +295,12 @@ export default class Deploy extends Command {
       for (const filePath of componentAnalysisFilePaths) {
         if (filePath.endsWith('.json')) {
           hasAnalysis = true;
-          const content = fs.readFileSync(
-            path.join(analysisDir, filePath),
-            'utf-8',
-          );
+          const content = fs.readFileSync(path.join(analysisDir, filePath), 'utf-8');
           const component = JSON.parse(content);
           const { scope, filename, moduleThunkRaw } = component;
 
           const virtualFilePath = `${filename}`;
-          const filenameWithOutExt = filename.slice(
-            0,
-            filename.lastIndexOf('.'),
-          );
+          const filenameWithOutExt = filename.slice(0, filename.lastIndexOf('.'));
 
           input[filenameWithOutExt] = filename;
           vfsForRollup[virtualFilePath] = moduleThunkRaw;
@@ -370,6 +326,7 @@ export default class Deploy extends Command {
             babelrc: false,
             presets: ['@babel/preset-react', '@babel/preset-typescript'],
             plugins: ['@babel/plugin-proposal-class-properties'],
+            extensions: SUPPORTED_EXTENSIONS,
             include: '**',
             compact: false,
           }),
@@ -382,27 +339,23 @@ export default class Deploy extends Command {
 
               if (id.match(/^[/.]/) && importer) {
                 const parts = path.parse(id);
-                let resolved = path.relative(
-                  process.cwd(),
-                  path.resolve(path.dirname(importer), id),
-                );
-                //let resolved = path.join(path.dirname(importer), id);
+                const resolved = path.relative(process.cwd(), path.resolve(path.dirname(importer), id));
 
                 if (resolved in vfsForRollup) {
                   return resolved;
                 }
 
-                if (!resolved.endsWith('.js')) {
-                  if (resolved + '.js' in vfsForRollup) {
-                    return resolved + '.js';
+                for (const ext of SUPPORTED_EXTENSIONS) {
+                  if (resolved + ext in vfsForRollup) {
+                    return resolved + ext;
                   }
 
-                  const indexNamed = path.join(resolved, 'index.js');
+                  const indexNamed = path.join(resolved, `index${ext}`);
                   if (indexNamed in vfsForRollup) {
                     return indexNamed;
                   }
 
-                  const doubleNamed = path.join(resolved, parts.name + '.js');
+                  const doubleNamed = path.join(resolved, parts.name + ext);
                   if (doubleNamed in vfsForRollup) {
                     return doubleNamed;
                   }
@@ -504,11 +457,7 @@ export default class Deploy extends Command {
           }
 
           default:
-            throw new Error(
-              `Unhandled rollup chunk entry type ${
-                (entry as any).type
-              }. This is a bug with Outsmartly.`,
-            );
+            throw new Error(`Unhandled rollup chunk entry type ${(entry as any).type}. This is a bug with Outsmartly.`);
         }
       }
       return { components, vfs };
@@ -518,12 +467,7 @@ export default class Deploy extends Command {
     }
   }
 
-  async deploy(
-    bearerToken: string,
-    environment: string,
-    configPath: string,
-    watch: boolean,
-  ): Promise<void> {
+  async deploy(bearerToken: string, environment: string, configPath: string, watch: boolean): Promise<void> {
     this.spinner.spinner = cliSpinners.dots12;
     this.spinner.color = 'blue';
     this.spinner.text = chalk.dim(chalk.blue('Bundling configuration...'));
@@ -531,10 +475,7 @@ export default class Deploy extends Command {
     let progressTimer!: ReturnType<typeof setTimeout>;
 
     try {
-      const { chunk, bundle } = await rollupOutsmartlyConfigFile(
-        configPath,
-        this.cache,
-      );
+      const { chunk, bundle } = await rollupOutsmartlyConfigFile(configPath, this.cache);
       this.cache = bundle.cache;
       if (this.watcher) {
         this.setupWatchers();
@@ -549,11 +490,7 @@ export default class Deploy extends Command {
       const options = {
         filename: configPath,
       };
-      const iife = vm.runInNewContext(
-        `(function (module, exports) { ${chunk.code} });`,
-        context,
-        options,
-      );
+      const iife = vm.runInNewContext(`(function (module, exports) { ${chunk.code} });`, context, options);
       const module: any = { exports: {} };
       iife(module, module.exports);
       const { host, tmpDir = './.outsmartly/' } = module.exports.default;
@@ -564,9 +501,7 @@ export default class Deploy extends Command {
 
       const analysis = await this.bundleAnalysis(tmpDir);
       this.spinner.spinner = spinnerClockwise;
-      this.spinner.text = chalk.blue(
-        `Deploying to Outsmartly... (${environment})`,
-      );
+      this.spinner.text = chalk.blue(`Deploying to Outsmartly... (${environment})`);
 
       const sitePatch: PatchSite = {
         host,
@@ -634,9 +569,7 @@ export default class Deploy extends Command {
 
       this.spinner.stopAndPersist({
         symbol: '🚀',
-        text: chalk.green(
-          `Deployed to Outsmartly (${environment}) https://${host}/`,
-        ),
+        text: chalk.green(`Deployed to Outsmartly (${environment}) https://${host}/`),
       });
     } catch (e) {
       // aborting isn't actually an error, just ignore it and move on
