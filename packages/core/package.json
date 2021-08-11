@@ -27,9 +27,6 @@
   "dependencies": {
     "@outsmartly/react": "0.0.74"
   },
-  "peerDependencies": {
-    "next": "*"
-  },
   "devDependencies": {
     "msw": "^0.33.1",
     "navigator.sendbeacon": "^0.0.20",
