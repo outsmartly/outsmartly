@@ -33,6 +33,6 @@
     "react": "*"
   },
   "devDependencies": {
-    "@types/react": "^16.9.51"
+    "@types/react": "^17"
   }
 }

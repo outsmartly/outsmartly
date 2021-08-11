@@ -18,7 +18,12 @@
     "npm": ">=7"
   },
   "workspaces": [
-    "./packages/*"
+    "./packages/cli",
+    "./packages/react",
+    "./packages/core",
+    "./packages/plugin-image-optimization",
+    "./packages/plugin-limespot",
+    "./packages/gatsby-plugin-outsmartly"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
@@ -31,6 +36,8 @@
     "@jayphelps/jay-scripts": "^0.0.50",
     "@types/jest": "^27.0.0",
     "@types/node": "^16.4.13",
+    "@types/react": "^17.0.17",
+    "@types/react-dom": "^17.0.9",
     "@types/sinon": "^10.0.2",
     "jest": "^27.0.6",
     "prettier": "^2.3.2",
