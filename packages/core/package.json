@@ -3,8 +3,12 @@
   "description": "",
   "version": "0.0.2",
   "license": "MIT",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./next": "./dist/public/next/index.js"
+  },
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
     "/dist"
@@ -20,8 +24,15 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
+  "dependencies": {
+    "@outsmartly/react": "0.0.74"
+  },
+  "peerDependencies": {
+    "next": "*"
+  },
   "devDependencies": {
     "msw": "^0.33.1",
-    "navigator.sendbeacon": "^0.0.20"
+    "navigator.sendbeacon": "^0.0.20",
+    "next": "^11.1.0"
   }
 }

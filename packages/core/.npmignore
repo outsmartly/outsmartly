@@ -1,0 +1,3 @@
+tests/
+__tests__/
+dist/private/
