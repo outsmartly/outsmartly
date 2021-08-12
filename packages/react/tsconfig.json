@@ -2,6 +2,7 @@
   "include": ["src"],
   "extends": "@jayphelps/jay-scripts/configs/tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM"]
+    "lib": ["DOM"],
+    "target": "ES2015"
   }
 }

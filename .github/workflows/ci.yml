@@ -11,7 +11,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '15.x'
+          node-version: '14.x'
       - name: Install npm v7
         run: npm install -g npm@latest
       - name: Install dependencies
