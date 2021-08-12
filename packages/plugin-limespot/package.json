@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/plugin-limespot",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Limespot plugin for Outsmartly",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
@@ -14,6 +14,9 @@
     "directory": "packages/plugin-limespot"
   },
   "main": "./dist/index.js",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
