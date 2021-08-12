@@ -1,4 +1,4 @@
-import * as console from 'console';
+import * as console from './console';
 
 export function getRehydrationData(): string {
   const overridesScript = document.getElementById('__OUTSMARTLY_DATA__');

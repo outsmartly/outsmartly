@@ -1,7 +1,7 @@
 {
   "name": "@outsmartly/core",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "main": "dist/index.js",
   "exports": {
@@ -24,8 +24,8 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "dependencies": {
-    "@outsmartly/react": "0.0.74"
+  "peerDependencies": {
+    "@outsmartly/react": "*"
   },
   "devDependencies": {
     "msw": "^0.33.1",

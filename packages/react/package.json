@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/react",
-  "version": "0.0.74",
+  "version": "0.0.76",
   "description": "Client-side SDK for React (or React-like libraries) and Outsmartly",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
@@ -14,10 +14,6 @@
     "directory": "packages/react"
   },
   "main": "./dist/cjs/index.js",
-  "exports": {
-    "import": "./dist/esm/index.js",
-    "require": "./dist/cjs/index.js"
-  },
   "files": [
     "dist",
     "README.md",

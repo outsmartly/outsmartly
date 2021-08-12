@@ -1,6 +1,6 @@
 {
   "name": "@outsmartly/plugin-limespot",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Limespot plugin for Outsmartly",
   "author": "Outsmartly <support@outsmartly.com>",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@outsmartly/core": "0.0.2"
+    "@outsmartly/core": "*"
   },
   "devDependencies": {
     "event-target-polyfill": "^0.0.3",
