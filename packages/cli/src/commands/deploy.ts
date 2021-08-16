@@ -67,7 +67,11 @@ async function rollupOutsmartlyConfigFile(
         browser: true,
         preferBuiltins: false,
       }),
-      rollupCommonJs(),
+      rollupCommonJs({
+        dynamicRequireTargets: [
+          'node_modules/enquire.js/**/*.js',
+        ],
+      ),
       rollupJson(),
       rollupInjectProcessEnv({
         NODE_ENV: 'production',
@@ -380,8 +384,11 @@ export default class Deploy extends Command {
               return code;
             },
           },
-          rollupCommonJs(),
-          rollupJson(),
+          rollupCommonJs({
+            dynamicRequireTargets: [
+              'node_modules/enquire.js/**/*.js',
+            ],
+          ),          rollupJson(),
           rollupNodeResolve({
             browser: true,
             preferBuiltins: false,
