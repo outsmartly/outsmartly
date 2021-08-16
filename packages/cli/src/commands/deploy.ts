@@ -68,10 +68,7 @@ async function rollupOutsmartlyConfigFile(
         preferBuiltins: false,
       }),
       rollupCommonJs({
-        dynamicRequireTargets: [
-          'node_modules/enquire.js/*',
-          //'node_modules/gatsby/cache-dir/public-page-renderer*',
-        ],
+        dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
       }),
       rollupJson(),
       rollupInjectProcessEnv({
@@ -386,12 +383,8 @@ export default class Deploy extends Command {
             },
           },
           rollupCommonJs({
-            dynamicRequireTargets: [
-              'node_modules/enquire.js/*',
-              //'node_modules/gatsby/cache-dir/public-page-renderer*',
-            ],
+            dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
           }),
-          rollupJson(),
           rollupNodeResolve({
             browser: true,
             preferBuiltins: false,
