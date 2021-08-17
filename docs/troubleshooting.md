@@ -12,7 +12,7 @@ To aid with debugging Outsmartly ships logging from the edge to the Browser's co
 
 Outsmartly's logs will notify you of error that may have occurred when running your code on our edge servers.
 
-![Debugging Logs Example](.gitbook/assets/debugging-logs%20%281%29.jpg)
+![Debugging Logs Example](.gitbook/assets/debugging-logs.jpg)
 
 ### 2. User generated logs from logging calls in your code.
 
