@@ -7,6 +7,7 @@ The signature of a middleware is a function which accepts two arguments: an [`Ou
 Middleware should call `next()` whenever they want to continue on to the "next" middleware, or if it's the last middleware, continue to the default, built-in functionality of Outsmartly.
 
 ```typescript
+// a function which accepts an event object and a next() function.
 type Middleware = (
   event: OutsmartlyMiddlewareEvent,
   next: (request?: Request) => Promise<Response>,
