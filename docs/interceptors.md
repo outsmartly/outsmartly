@@ -6,7 +6,7 @@ You can use them to make API serverless endpoints at the edge, proxy requests to
 
 Like other parts of your config, interceptors run inside a JavaScript environment in Outsmartly's CDN edge. It uses the standardized web APIs, such as [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request), [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), and others; it does not have a DOM and is not a Node.js runtime. This is part of the reason \(among many\) that Outsmartly is able to offer the performance it does.
 
-The signature of an interceptor is a function which accepts one argument: an [`OutsmartlyEvent`](reference-guide/outsmartlyevent.md). The `OutsmartlyEvent` contains additional information such as the [`OutsmartlyRequest`](reference-guide/outsmartlyrequest.md) object, [`OutsmartlyVisitor`](reference-guide/outsmartlyvisitor.md), helpers for cookies, and more.
+The signature of an interceptor is a function which accepts one argument: an [`OutsmartlyInterceptEvent`](reference-guide/OutsmartlyInterceptEvent.md). The `OutsmartlyInterceptEvent` contains additional information such as the [`OutsmartlyRequest`](reference-guide/outsmartlyrequest.md) object, [`OutsmartlyEdgeVisitor`](reference-guide/OutsmartlyEdgeVisitor.md), helpers for cookies, and more.
 
 ```typescript
 function intercept?(event: OutsmartlyInterceptEvent): PromiseOrValue<Response>;

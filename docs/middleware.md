@@ -2,7 +2,7 @@
 
 Middleware is used to alter the behavior of a request both before and after Outsmartly makes the request to your origin server and applies any overrides, if applicable.
 
-The signature of a middleware is a function which accepts two arguments: an [`OutsmartlyEvent`](reference-guide/outsmartlyevent.md) and a `next()` function. The `OutsmartlyEvent` contains additional information such as the [`OutsmartlyRequest`](reference-guide/outsmartlyrequest.md) object, [`OutsmartlyVisitor`](reference-guide/outsmartlyvisitor.md), helpers for cookies, and more.
+The signature of a middleware is a function which accepts two arguments: an [`OutsmartlyMiddlewareEvent`](reference-guide/OutsmartlyMiddlewareEvent.md) and a `next()` function. The `OutsmartlyMiddlewareEvent` contains additional information such as the [`OutsmartlyRequest`](reference-guide/outsmartlyrequest.md) object, [`OutsmartlyEdgeVisitor`](reference-guide/OutsmartlyEdgeVisitor.md), helpers for cookies, and more.
 
 Middleware should call `next()` whenever they want to continue on to the "next" middleware, or if it's the last middleware, continue to the default, built-in functionality of Outsmartly.
 
