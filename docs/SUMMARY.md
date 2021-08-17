@@ -1,7 +1,6 @@
 # Table of contents
 
 - [Introduction](README.md)
-- [Quick Start \(Next.js\)](getting-started.md)
 - [Performance Best Practices / High Performance Checklist](performance-best-practices.md)
 - [Interceptors](interceptors.md)
 - [Middleware](middleware.md)
