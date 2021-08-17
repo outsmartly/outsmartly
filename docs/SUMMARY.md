@@ -2,6 +2,7 @@
 
 - [Introduction](README.md)
 - [Performance Best Practices / High Performance Checklist](performance-best-practices.md)
+- [Edge Slice Re-rendering](edge-slice-rerendering.md)
 - [Interceptors](interceptors.md)
 - [Middleware](middleware.md)
 - [Plugins](plugins.md)
