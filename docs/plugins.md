@@ -34,7 +34,7 @@ export default {
 
 Plugins are objects with a `name` and lifecycle methods.
 
-#### [Type Definition](../../packages/core/src/public/types.ts#:~:text=interface%20Plugin)
+##### [Type Definition](../../packages/core/src/public/types.ts#:~:text=interface%20Plugin)
 
 ### Example
 

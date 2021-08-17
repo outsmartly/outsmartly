@@ -37,4 +37,4 @@ export default {
 };
 ```
 
-### [Type Definition](../../packages/core/src/public/types.ts#:~:text=interface%20OutsmartlyConfig)
+#### [Type Definition](../../packages/core/src/public/types.ts#:~:text=interface%20OutsmartlyConfig)

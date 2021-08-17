@@ -105,4 +105,4 @@ export function myCustomPlugin(options) {
 }
 ```
 
-### [Type Definition](../../packages/core/src/public/MessageBus.ts#:~:text=class%20MessageBus)
+#### [Type Definition](../../packages/core/src/public/MessageBus.ts#:~:text=class%20MessageBus)
