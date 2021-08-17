@@ -64,6 +64,12 @@ export function loadOverridesForPathname(pathname: string, options: OverrideLoad
   return preloadOverridesForPathname(pathname, options);
 }
 
+export interface APIResponseBody<T> {
+  success: boolean;
+  errors: string[];
+  result: T | null;
+}
+
 export function preloadOverridesForPathname(pathname: string, { cache = false }: OverrideLoadOptions): Promise<void> {
   if (!_outsmartly_enabled) {
     return Promise.resolve();
@@ -98,9 +104,16 @@ export function preloadOverridesForPathname(pathname: string, { cache = false }:
 
     try {
       const resp = await fetch(endpoint.href);
-      const data: OutsmartlyScriptData = await resp.json();
+      const json: APIResponseBody<OutsmartlyScriptData> = await resp.json();
+      if (json.errors.length) {
+        throw new Error(json.errors.join('\n'));
+      }
 
-      setOverridesForPathname(data, pathname);
+      if (!json.result) {
+        throw new Error('Result missing from API response, without any provided errors.');
+      }
+
+      setOverridesForPathname(json.result, pathname);
       resolve();
     } catch (e) {
       console.error(`Unable to fetch overrides for ${endpoint}`, e);
