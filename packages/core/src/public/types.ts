@@ -246,8 +246,25 @@ export interface Route {
 }
 
 export interface Plugin {
+  /**
+   * The name of your plugin, e.g. '@myapp/outsmartly-plugin-example'
+   */
   name: string;
-  setup?(context: { config: OutsmartlyConfig; messageBus: EdgeMessageBus }): void;
+
+  /**
+   * An optional lifecycle function that is called when the edge is initially
+   * starting up.
+   *
+   * The OutsmartlyConfig provided has been normalized so that all top-level
+   * fields are available even if they weren't originally provided.
+   *
+   * For example, `middleware` and `routes` will always be defined, even if
+   * they weren't originally provided in the outsmartly.config.js used.
+   */
+  setup?(context: {
+    config: Required<OutsmartlyConfig>;
+    messageBus: EdgeMessageBus
+  }): void;
 }
 
 export interface OutsmartlyConfig {

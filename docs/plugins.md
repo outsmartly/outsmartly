@@ -34,28 +34,7 @@ export default {
 
 Plugins are objects with a `name` and lifecycle methods.
 
-```typescript
-interface Plugin {
-  /**
-   * The name of your plugin, e.g. `@yourcompany/outsmartly-plugin-does-something'.
-   * Used to improve logging and error messages.
-   */
-  name: string;
-
-  /**
-   * Optional lifecycle method called once, each time the edge worker is starting
-   * up. Note that you cannot start any asynchronous operations during setup,
-   * however, you can add middleware, interceptors, overrides, etc. to the
-   * existing Outsmartly `config`.
-   *
-   * It accepts a single argument: an object containing the `config` derived
-   * from the currently deployed outsmartly.config.js default export, as
-   * well as the `messageBus`, which can be used to listen for or emit messages
-   * that others can also listen for.
-   */
-  setup?(context: { config: OutsmartlyConfig; messageBus: EdgeMessageBus }): void;
-}
-```
+#### [Type Definition](../../packages/core/src/public/types.ts#:~:text=interface%20Plugin)
 
 ### Example
 
@@ -64,6 +43,12 @@ export function myCustomPlugin(options) {
   return {
     name: '@yourcompany/outsmartly-plugin-does-something',
     setup({ config, messageBus }) {
+      // Listening for messages, globally
+      messageBus.on('Something.HAPPENED', async (event) => {
+        const { message } = event;
+        // do something with it, such as call fetch()
+      });
+
       // Adding custom middleware
       config.middleware.unshift(async (event, next) => {
         const response = await next();
@@ -75,11 +60,6 @@ export function myCustomPlugin(options) {
         async intercept(event) {
           return new Response('hello, world!');
         },
-      });
-
-      // Listening for messages, globally
-      messageBus.on('Something.HAPPENED', async (message) => {
-        // do something with it, such as call fetch()
       });
     },
   };

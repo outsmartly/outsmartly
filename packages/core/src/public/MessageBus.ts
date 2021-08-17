@@ -68,29 +68,13 @@ export abstract class MessageBus {
     );
   }
 
-  flushToExternal(): void {
-    // No sense calling this._writeToExternal() with a false alarm,
-    // that way they don't need to handle emptiness themselves.
-    if (this._throttleBuffer.length === 0) {
-      return;
-    }
-
-    if (this._options.debug) {
-      console.log('MessageBus flushToExternal()');
-    }
-
-    this._writeToExternal(this._throttleBuffer);
-
-    // It's possible this function will be called by someone else directly
-    // in which case we need to cancel the timer if it's still running.
-    if (this._throttleTimerId) {
-      clearTimeout(this._throttleTimerId);
-    }
-    this._throttleBuffer = [];
-    this._throttleTimerId = null;
-  }
-
-  /** Attach an event listener */
+  /**
+   * Listen for messages emitted. When listening at edge-side, the
+   * listener is invoked for matching message types coming from both
+   * the client-side *and* edge-side. When listening client-side, only
+   * messages emitted client-side will be received. The direction of
+   * messages is always client -> edge, never edge -> client.
+   */
   on<T extends keyof MessageDataByType>(
     type: T,
     callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
@@ -111,7 +95,10 @@ export abstract class MessageBus {
     return this;
   }
 
-  /** Remove an event listener */
+  /**
+   * Stop listening for messages. Note that the callback passed in must be
+   * the same function instance you originally passed to `on(type, callback)`
+   */
   off<T extends keyof MessageDataByType>(
     type: T,
     callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
@@ -130,7 +117,10 @@ export abstract class MessageBus {
     return this;
   }
 
-  /** Attach an event listener that will run only once */
+  /**
+   * Listen for messages emitted only once. Equivalent to using on() then using off() after
+   * the first matching message.
+   */
   once<T extends keyof MessageDataByType>(
     type: T,
     callback: MessageBusListener<OutsmartlyMessageEvent<T, MessageDataByType[T]>>,
@@ -149,7 +139,12 @@ export abstract class MessageBus {
     return this;
   }
 
-  /** Emit an event (i.e. trigger, fire) */
+  /**
+   * Emit an event (i.e. trigger, dispatch, fire) through the MessageBus
+   * at the edge. Messages emitted client-side will re-emit at the edge,
+   * but messages emitted edge-side will *not* re-emit client-side. The
+   * direction of messages is always client -> edge, never edge -> client.
+   */
   emit<T extends keyof MessageDataByType>(type: T, data: MessageDataByType[T]): this;
   emit<T extends string, D = unknown>(type: T extends keyof MessageDataByType ? never : T, data: D): this;
   emit<D>(type: string, data: D): this {
@@ -170,5 +165,34 @@ export abstract class MessageBus {
     }
 
     return this;
+  }
+
+  /**
+   * Force the internal message buffer to flush. When called client-side
+   * this will force the MessageBus to send all buffered messages to the
+   * edge immediately. Edge-side this method currently does nothing,
+   * however, eventually it will flush the buffer and immediately write
+   * to a persisted database.
+   */
+  flushToExternal(): void {
+    // No sense calling this._writeToExternal() with a false alarm,
+    // that way they don't need to handle emptiness themselves.
+    if (this._throttleBuffer.length === 0) {
+      return;
+    }
+
+    if (this._options.debug) {
+      console.log('MessageBus flushToExternal()');
+    }
+
+    this._writeToExternal(this._throttleBuffer);
+
+    // It's possible this function will be called by someone else directly
+    // in which case we need to cancel the timer if it's still running.
+    if (this._throttleTimerId) {
+      clearTimeout(this._throttleTimerId);
+    }
+    this._throttleBuffer = [];
+    this._throttleTimerId = null;
   }
 }

@@ -105,45 +105,4 @@ export function myCustomPlugin(options) {
 }
 ```
 
-## Type Definition
-
-```typescript
-class MessageBus {
-  constructor(options?: MessageBusOptions);
-
-  /**
-   * Listen for messages emitted. When listening at edge-side, the
-   * listener is invoked for matching message types coming from both
-   * the client-side *and* edge-side. When listening client-side, only
-   * messages emitted client-side will be received. The direction of
-   * messages is always client -> edge, never edge -> client.
-   */
-  on(type: string, callback: MessageBusListener<any, any>): this;
-
-  /**
-   * Stop listening for messages. Note that the callback passed in must be
-   * the same function instance you originally passed to `on(type, callback)`
-   */
-  off(type: string, callback: MessageBusListener<any, any>): this;
-
-  /** Attach an event listener that will run only once */
-  once(type: string, callback: MessageBusListener<any, any>): this;
-
-  /**
-   * Emit an event (i.e. trigger, dispatch, fire) through the MessageBus
-   * at the edge. Messages emitted client-side will re-emit at the edge,
-   * but messages emitted edge-side will *not* re-emit client-side. The
-   * direction of messages is always client -> edge, never edge -> client.
-   */
-  emit<T>(type: string, data: T): this;
-
-  /**
-   * Force the internal message buffer to flush. When called client-side
-   * this will force the MessageBus to send all buffered messages to the
-   * edge immediately. Edge-side this method currently does nothing,
-   * however, eventually it will flush the buffer and immediately write
-   * to a persisted database.
-   */
-  flushToExternal(): void;
-}
-```
+### [Type Definition](../../packages/core/src/public/MessageBus.ts#:~:text=class%20MessageBus)
