@@ -20,7 +20,7 @@ describe('Limespot plugin', () => {
       public message: MessageBusMessage<T, D>,
       public cookies: OutsmartlyReadonlyCookies,
     ) {
-      super('outsmartlyedgemesssage');
+      super('outsmartlyedgemessage');
     }
   }
 
