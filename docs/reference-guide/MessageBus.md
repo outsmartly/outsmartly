@@ -40,6 +40,8 @@ export function Home() {
 }
 ```
 
+#### [Type Definition](../../packages/core/src/public/ClientMessageBus.ts#:~:text=class%20ClientMessageBus)
+
 ### Edge-side
 
 At the edge, you can gain access to the MessageBus from any OutsmartlyEvent passed to middleware, interceptors, or overrides:
@@ -105,4 +107,4 @@ export function myCustomPlugin(options) {
 }
 ```
 
-#### [Type Definition](../../packages/core/src/public/MessageBus.ts#:~:text=class%20MessageBus)
+#### [Type Definition](../../packages/core/src/public/EdgeMessageBus.ts#:~:text=class%20EdgeMessageBus)
