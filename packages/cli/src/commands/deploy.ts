@@ -22,7 +22,7 @@ import multiline from 'multiline-template';
 import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite } from '../api';
 import { panic } from '../panic';
 
-const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx'];
+const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
 
 async function rollupOutsmartlyConfigFile(
   configPath: string,
@@ -144,7 +144,6 @@ export default class Deploy extends Command {
     config: flags.string({
       description: 'Path to your Outsmartly config file.',
       helpValue: JSON.stringify('path/to/outsmartly.config.js'),
-      default: './outsmartly.config.js',
     }),
     watch: flags.boolean({
       description: 'Redeploy when files change.',
@@ -211,14 +210,34 @@ export default class Deploy extends Command {
     return bearerToken;
   }
 
+  findOutsmartlyConfigPath(customConfigPath?: string): string {
+    if (customConfigPath) {
+      const fullPath = path.resolve(process.cwd(), customConfigPath);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`No config file could be found at the provided custom path: ${customConfigPath}`);
+      }
+      return fullPath;
+    }
+
+    for (const ext of SUPPORTED_EXTENSIONS) {
+      const fullPath = path.resolve(process.cwd(), `outsmartly.config${ext}`);
+      if (fs.existsSync(fullPath)) {
+        return fullPath;
+      }
+    }
+
+    throw new Error(
+      `No Outsmartly config file could be found at ${path.resolve(process.cwd(), 'outsmartly.config.js')}`,
+    );
+  }
+
   async run() {
     const { args, flags } = this.parse(Deploy);
-    const { config: configPath, watch } = flags;
+    const { config: customConfigPath, watch } = flags;
     const { environment } = args;
 
     const bearerToken = await this.findBearerToken(flags);
-
-    const configFullPath = path.resolve(process.cwd(), configPath);
+    const configFullPath = this.findOutsmartlyConfigPath(customConfigPath);
 
     if (watch) {
       this.watcher = chokidar.watch(configFullPath).on('change', async () => {
@@ -234,7 +253,7 @@ export default class Deploy extends Command {
           return;
         }
 
-        await this.deploy(bearerToken, environment, configPath, watch);
+        await this.deploy(bearerToken, environment, configFullPath, watch);
       });
     }
 
