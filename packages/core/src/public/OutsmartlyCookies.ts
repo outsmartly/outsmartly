@@ -75,7 +75,8 @@ function parseCookiesIntoMap(input: string, map: Map<string, string>): void {
 
   for (let i = 0, l = parts.length; i < l; i++) {
     const [name, value] = parts[i].split('=');
-    map.set(name.trim(), value);
+    // Regular map.set() might throw if this is the immutable OutsmartlyReadonlyCookies
+    Map.prototype.set.call(map, name.trim(), value);
   }
 }
 
