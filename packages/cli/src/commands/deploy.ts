@@ -54,6 +54,15 @@ async function rollupOutsmartlyConfigFile(
       handleRollupError(warning);
     },
     plugins: [
+      rollupNodeResolve({
+        browser: true,
+        preferBuiltins: false,
+        extensions: SUPPORTED_EXTENSIONS,
+      }),
+      rollupCommonJs({
+        dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
+        extensions: SUPPORTED_EXTENSIONS,
+      }),
       rollupBabel({
         babelHelpers: 'bundled',
         babelrc: false,
@@ -62,13 +71,6 @@ async function rollupOutsmartlyConfigFile(
         extensions: SUPPORTED_EXTENSIONS,
         include: '**',
         compact: false,
-      }),
-      rollupNodeResolve({
-        browser: true,
-        preferBuiltins: false,
-      }),
-      rollupCommonJs({
-        dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
       }),
       rollupJson(),
       rollupInjectProcessEnv({
@@ -339,15 +341,6 @@ export default class Deploy extends Command {
         input,
         external: ['react'],
         plugins: [
-          rollupBabel({
-            babelHelpers: 'bundled',
-            babelrc: false,
-            presets: ['@babel/preset-react', '@babel/preset-typescript'],
-            plugins: ['@babel/plugin-proposal-class-properties'],
-            extensions: SUPPORTED_EXTENSIONS,
-            include: '**',
-            compact: false,
-          }),
           {
             name: 'custom-outsmartly-virtual',
             resolveId(id, importer) {
@@ -401,12 +394,23 @@ export default class Deploy extends Command {
               return code;
             },
           },
-          rollupCommonJs({
-            dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
-          }),
           rollupNodeResolve({
             browser: true,
             preferBuiltins: false,
+            extensions: SUPPORTED_EXTENSIONS,
+          }),
+          rollupCommonJs({
+            dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
+            extensions: SUPPORTED_EXTENSIONS,
+          }),
+          rollupBabel({
+            babelHelpers: 'bundled',
+            babelrc: false,
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: ['@babel/plugin-proposal-class-properties'],
+            extensions: SUPPORTED_EXTENSIONS,
+            include: '**',
+            compact: false,
           }),
           rollupInjectProcessEnv({
             NODE_ENV: 'production',
