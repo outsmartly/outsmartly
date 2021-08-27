@@ -29,9 +29,7 @@
     ]
   },
   "scripts": {
-    "build": "echo 'cli: no build required.'",
-    "postpack": "rm -f oclif.manifest.json",
-    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "build": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "echo 'cli: no tests available.'",
     "version": "oclif-dev readme && git add README.md",
     "outsmartly": "node --unhandled-rejections=strict ./bin/outsmartly.cjs",
