@@ -12,13 +12,20 @@ type CookieChange = { value: string; options: SetCookieOptions };
 
 export class OutsmartlyReadonlyCookies extends Map<string, string> {
   constructor(entries: [string, string][] | string | null) {
+    super();
+
     if (typeof entries === 'string') {
-      super();
       parseCookiesIntoMap(entries, this);
       return;
     }
 
-    super(entries);
+    // Cannot use super(entries) because it actually internally calls this.set()
+    // and would throw our custom "immutable" error.
+    if (Array.isArray(entries)) {
+      for (const [key, value] of entries) {
+        Map.prototype.set.call(this, key, value);
+      }
+    }
   }
 
   override toString(): string {
