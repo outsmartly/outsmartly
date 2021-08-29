@@ -11,6 +11,7 @@ import rollupJson from '@rollup/plugin-json';
 import rollupNodeResolve from '@rollup/plugin-node-resolve';
 import { babel as rollupBabel } from '@rollup/plugin-babel';
 import rollupInjectProcessEnv from 'rollup-plugin-inject-process-env';
+import { terser as rollupTerser } from 'rollup-plugin-terser';
 import chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import cliSpinners from 'cli-spinners';
@@ -23,79 +24,6 @@ import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite }
 import { panic } from '../panic';
 
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
-
-async function rollupOutsmartlyConfigFile(
-  configPath: string,
-  cache?: RollupCache,
-): Promise<{ chunk: OutputChunk; bundle: RollupBuild }> {
-  const bundle = await rollup({
-    input: configPath,
-    cache,
-    onwarn(warning, _warn) {
-      switch (warning.code) {
-        // Swallow these warnings because they happen frequently in real code.
-        // e.g. it seems to happen for any code that deals with Next.js router
-        // like using <Link>
-        case 'CIRCULAR_DEPENDENCY':
-        case 'THIS_IS_UNDEFINED':
-          return;
-
-        case 'NON_EXISTENT_EXPORT':
-          handleRollupError(warning, true);
-          return;
-
-        case 'UNRESOLVED_IMPORT':
-          warning.message = `'${warning.source}' is imported by ${warning.importer}, but could not be resolved`;
-          handleRollupError(warning, true);
-          return;
-      }
-
-      warning.message = `Rollup Bundler Warning: ${warning.message}`;
-      handleRollupError(warning);
-    },
-    plugins: [
-      rollupNodeResolve({
-        browser: true,
-        preferBuiltins: false,
-        extensions: SUPPORTED_EXTENSIONS,
-      }),
-      rollupCommonJs({
-        dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
-        extensions: SUPPORTED_EXTENSIONS,
-      }),
-      rollupBabel({
-        babelHelpers: 'bundled',
-        babelrc: false,
-        presets: ['@babel/preset-react', '@babel/preset-typescript'],
-        plugins: ['@babel/plugin-proposal-class-properties'],
-        extensions: SUPPORTED_EXTENSIONS,
-        include: '**',
-        compact: false,
-      }),
-      rollupJson(),
-      rollupInjectProcessEnv({
-        NODE_ENV: 'production',
-      }),
-    ],
-  });
-
-  const { output } = await bundle.generate({
-    format: 'cjs',
-    exports: 'named',
-    // This might be needed later, so keep it around since it took me a while to
-    // figure out how to emit __esModule
-    //esModule: false,
-    sourcemap: true,
-  });
-
-  if (output.length !== 1) {
-    throw new Error(`Rollup generate() returned ${output.length} assets, but we expected only 1.`);
-  }
-
-  const chunk = output[0];
-
-  return { chunk, bundle };
-}
 
 const absolutePath = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 function isAbsolute(path: string) {
@@ -137,6 +65,15 @@ function handleRollupError(err: RollupWarning | RollupError, fatal = false): nev
   }
 }
 
+interface Flags {
+  config: string | undefined;
+  watch: boolean;
+  token: string | undefined;
+  minify: boolean;
+  reactImportSource: string;
+  help: void;
+}
+
 export default class Deploy extends Command {
   static description = 'Deploy your Outsmartly configuration from outsmartly.config.js';
 
@@ -155,6 +92,14 @@ export default class Deploy extends Command {
       description:
         'Access token, if provided, otherwise the CLI will look for OUTSMARTLY_TOKEN. If not defined, it will prompt you to provide one.',
     }),
+    minify: flags.boolean({
+      description: 'Minify the result of bundling your outsmartly.config.js',
+      default: false,
+    }),
+    reactImportSource: flags.string({
+      description: 'Name of the package where Babel should import the JSX helpers from.',
+      default: 'react',
+    }),
     help: flags.help({
       char: 'h',
       description: 'Show this help screen.',
@@ -170,6 +115,7 @@ export default class Deploy extends Command {
     },
   ];
 
+  flags!: Flags;
   watcher?: FSWatcher;
   pendingDeployCount = 0;
   watchedFiles = new Set<string>();
@@ -177,8 +123,8 @@ export default class Deploy extends Command {
   abortController = new AbortController();
   spinner = ora();
 
-  async findBearerToken(flags: any): Promise<string> {
-    const { token: bearerTokenOverride } = flags;
+  async findBearerToken(): Promise<string> {
+    const { token: bearerTokenOverride } = this.flags;
     const configFilePath = path.join(os.homedir(), '.config', 'outsmartly', 'config.json');
 
     let bearerToken = bearerTokenOverride ?? process.env.OUTSMARTLY_TOKEN;
@@ -235,10 +181,11 @@ export default class Deploy extends Command {
 
   async run() {
     const { args, flags } = this.parse(Deploy);
+    this.flags = flags;
     const { config: customConfigPath, watch } = flags;
     const { environment } = args;
 
-    const bearerToken = await this.findBearerToken(flags);
+    const bearerToken = await this.findBearerToken();
     const configFullPath = this.findOutsmartlyConfigPath(customConfigPath);
 
     if (watch) {
@@ -255,18 +202,23 @@ export default class Deploy extends Command {
           return;
         }
 
-        await this.deploy(bearerToken, environment, configFullPath, watch);
+        await this.deploy(bearerToken, environment, configFullPath);
       });
     }
 
     this.pendingDeployCount++;
-    await this.deploy(bearerToken, environment, configFullPath, watch);
+    await this.deploy(bearerToken, environment, configFullPath);
   }
 
   setupWatchers(): void {
     const prevWatchedFiles = new Set(this.watchedFiles);
 
     for (const module of this.cache?.modules!) {
+      // These are internal rollup paths that don't really exist
+      // so we have to skip them.
+      if (module.id.startsWith('\x00')) {
+        continue;
+      }
       this.watchedFiles.add(module.id);
       prevWatchedFiles.delete(module.id);
       this.watcher!.add(module.id);
@@ -277,6 +229,91 @@ export default class Deploy extends Command {
     for (const filePath of prevWatchedFiles) {
       this.watcher!.unwatch(filePath);
     }
+  }
+
+  async rollupOutsmartlyConfigFile(configPath: string): Promise<{ chunk: OutputChunk; bundle: RollupBuild }> {
+    const { flags } = this;
+    const plugins = [
+      rollupBabel({
+        babelHelpers: 'bundled',
+        babelrc: false,
+        presets: [
+          [
+            '@babel/preset-react',
+            {
+              runtime: 'automatic',
+              importSource: flags.reactImportSource,
+            },
+          ],
+          '@babel/preset-typescript',
+        ],
+        plugins: ['@babel/plugin-proposal-class-properties'],
+        extensions: SUPPORTED_EXTENSIONS,
+        include: '**',
+        compact: false,
+      }),
+      rollupNodeResolve({
+        browser: true,
+        preferBuiltins: false,
+        extensions: SUPPORTED_EXTENSIONS,
+      }),
+      rollupCommonJs({
+        dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
+      }),
+      rollupJson(),
+      rollupInjectProcessEnv({
+        NODE_ENV: 'production',
+      }),
+    ];
+
+    if (flags.minify) {
+      plugins.push(rollupTerser());
+    }
+
+    const bundle = await rollup({
+      input: configPath,
+      cache: this.cache,
+      onwarn(warning, _warn) {
+        switch (warning.code) {
+          // Swallow these warnings because they happen frequently in real code.
+          // e.g. it seems to happen for any code that deals with Next.js router
+          // like using <Link>
+          case 'CIRCULAR_DEPENDENCY':
+          case 'THIS_IS_UNDEFINED':
+            return;
+
+          case 'NON_EXISTENT_EXPORT':
+            handleRollupError(warning, true);
+            return;
+
+          case 'UNRESOLVED_IMPORT':
+            warning.message = `'${warning.source}' is imported by ${warning.importer}, but could not be resolved`;
+            handleRollupError(warning, true);
+            return;
+        }
+
+        warning.message = `Rollup Bundler Warning: ${warning.message}`;
+        handleRollupError(warning);
+      },
+      plugins,
+    });
+
+    const { output } = await bundle.generate({
+      format: 'cjs',
+      exports: 'named',
+      // This might be needed later, so keep it around since it took me a while to
+      // figure out how to emit __esModule
+      //esModule: false,
+      sourcemap: true,
+    });
+
+    if (output.length !== 1) {
+      throw new Error(`Rollup generate() returned ${output.length} assets, but we expected only 1.`);
+    }
+
+    const chunk = output[0];
+
+    return { chunk, bundle };
   }
 
   async bundleAnalysis(tmpDir: string): Promise<Analysis> {
@@ -485,7 +522,7 @@ export default class Deploy extends Command {
     }
   }
 
-  async deploy(bearerToken: string, environment: string, configPath: string, watch: boolean): Promise<void> {
+  async deploy(bearerToken: string, environment: string, configPath: string): Promise<void> {
     this.spinner.spinner = cliSpinners.dots12;
     this.spinner.color = 'blue';
     this.spinner.text = chalk.dim(chalk.blue('Bundling configuration...'));
@@ -493,7 +530,7 @@ export default class Deploy extends Command {
     let progressTimer!: ReturnType<typeof setTimeout>;
 
     try {
-      const { chunk, bundle } = await rollupOutsmartlyConfigFile(configPath, this.cache);
+      const { chunk, bundle } = await this.rollupOutsmartlyConfigFile(configPath);
       this.cache = bundle.cache;
       if (this.watcher) {
         this.setupWatchers();
@@ -589,7 +626,7 @@ export default class Deploy extends Command {
         symbol: '🚀',
         text: chalk.green(`Deployed to Outsmartly (${environment}) https://${host}/`),
       });
-    } catch (e) {
+    } catch (e: any) {
       // aborting isn't actually an error, just ignore it and move on
       if (e instanceof AbortError) {
         return;
@@ -620,15 +657,14 @@ export default class Deploy extends Command {
       panic(e);
     } finally {
       clearTimeout(progressTimer);
-
       // If files changed in the middle of our previous deployment we
       // need to do another one now.
       if (this.pendingDeployCount > 1) {
         this.pendingDeployCount = 1;
-        await this.deploy(bearerToken, environment, configPath, watch);
+        await this.deploy(bearerToken, environment, configPath);
       } else {
         this.pendingDeployCount = 0;
-        if (watch) {
+        if (this.flags.watch) {
           console.log(chalk.dim('🔍 Watching for changes...'));
         }
       }
