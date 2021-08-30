@@ -62,7 +62,7 @@
     "fs-extra": "^8.1.0",
     "inquirer": "^7.3.3",
     "multiline-template": "^1.1.0",
-    "node-fetch": "^3.0.0-beta.10",
+    "node-fetch": "^3.0.0-beta.9",
     "open": "^8.0.2",
     "openid-client": "^4.4.2",
     "ora": "^5.1.0",
