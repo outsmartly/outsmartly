@@ -259,6 +259,7 @@ export default class Deploy extends Command {
       }),
       rollupCommonJs({
         dynamicRequireTargets: ['node_modules/enquire.js/**/*.js'],
+        extensions: SUPPORTED_EXTENSIONS,
       }),
       rollupJson(),
       rollupInjectProcessEnv({
