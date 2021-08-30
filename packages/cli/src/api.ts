@@ -60,7 +60,7 @@ export async function apiFetch<R>(
 
   try {
     json = JSON.parse(text) as APIResponseBody<R>;
-  } catch (e) {
+  } catch (e: any) {
     // Thus far this only happens when Cloudflare itself is having issues in some form or another.
     // In general, it's not a good sign since we should *always* get JSON even when there are errors
     // as long as they were handled by the API server.
