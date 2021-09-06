@@ -1,6 +1,6 @@
 # @outsmartly/plugin-facebook
 
-> Trigger facebook events as per messagebus events at the edge
+> Configure facebook serverside events using messagebus listeners at the edge
 
 ## Install
 
@@ -53,6 +53,13 @@ facebookPlugin({
 ## Todo to support all facebook standard events
 
 [List of facebook standard events](https://developers.facebook.com/docs/facebook-pixel/reference#standard-events)
+
+## Test setup
+
+```bash
+# cd packages/plugin-facebook
+npm test
+```
 
 ## References facebook developer docs
 
