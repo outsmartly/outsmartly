@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES5", "WebWorker", "ES2015"],
+    "allowJs": true,
+    "strict": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "outDir": "dist/",
+    "typeRoots": ["../../node_modules/@types/", "node_modules/@types/"]
+  },
+  "include": ["src/**/*.ts", "types/**/*.ts"],
+  "exclude": ["node_modules/", "dist/"]
+}
