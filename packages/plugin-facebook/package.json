@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@peculiar/webcrypto": "^1.1.7",
-    "@types/jest": "^26.0.24",
+    "@types/jest": "^27.0.0",
     "@types/node": "^16.4.5",
     "event-target-polyfill": "0.0.3",
     "fast-text-encoding": "^1.0.3",
