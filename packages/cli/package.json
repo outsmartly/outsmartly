@@ -33,6 +33,8 @@
     "test": "echo 'cli: no tests available.'",
     "version": "oclif-dev readme && git add README.md",
     "outsmartly": "node --unhandled-rejections=strict ./bin/outsmartly.cjs",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "npm run build",
     "prepublishOnly": "rm tsconfig.tsbuildinfo || true"
   },
   "types": "lib/index.d.ts",
