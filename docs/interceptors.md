@@ -111,6 +111,6 @@ export default {
 ```
 
 {% hint style="info" %}
-If you do make external requests from your interceptor, keep in mind the geographic location of the destination will impact the API response times. When possible, try to utilize various forms of caching.
+If you do make external requests from your interceptor, keep in mind the geographic location of that other remote server will impact the API response times. When possible, try to utilize various forms of caching.
 {% endhint %}
 
