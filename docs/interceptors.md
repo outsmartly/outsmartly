@@ -39,9 +39,9 @@ Once you have an interceptor function, you can add it to a route object in you [
 Here we take the GitHub proxy example a step further, by putting it on a route at `/github-proxy/` and we use the `*` asterisk to signal we want to match anything that comes after it, including slashes. We can then get access to the value at `event.request.outsmartly.params[0]`.
 
 {% hint style="info" %}
-Outsmartly's path matching syntax follows the same behavior as Express v4, so you can easily test patterns using their helpful online tool: [http://forbeslindesay.github.io/express-route-tester/](http://forbeslindesay.github.io/express-route-tester/)
+Outsmartly's path matching syntax follows the same behavior as Express v4, for familiarity, so you can easily test patterns using their helpful online tool: [http://forbeslindesay.github.io/express-route-tester/](http://forbeslindesay.github.io/express-route-tester/)
 
-While this syntax is popular, tried and true, some do not realize that named route params are not greedy; they do not match anything past the next slash. So if you had used `/github-proxy/:path` instead, and made a request to `/github-proxy/users/outsmartly`, `:path` would not have matched. If you used `:path*`, with an asterisk, it would match the request, but `:path` only captures `users` it would not have captured `/outsmartly`.
+While this syntax is popular, tried and true, some do not realize that named route params are not greedy; they do not match anything past the next slash. So if you had used `/github-proxy/:path` instead, and made a request to `/github-proxy/users/outsmartly`, `:path` would not have matched. If you used `:path*` instead, it would match and the `users` part would be available at `event.request.outsmartly.params.path` and anything that comes after, such as `/outsmartly` can be found in `event.request.outsmartly.params[0]`. This is the same behavior of Express.
 {% endhint %}
 
 ```javascript
