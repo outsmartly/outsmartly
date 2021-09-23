@@ -12,7 +12,7 @@ Whichever technique you choose, both should be cached heavily using Outsmartly's
 
 One of the worst patterns for performance is blocking rendering behind the downloading, parsing, and execution of JavaScript. This pattern is frequently seen when implementing A/B Testing and Personalization. It has the worst impact on above-the-fold content.
 
-Outsmartly provides a simple mechanism that we call "overrides", which allow for modification of cached HTML within the CDN. This technique minimizes latency introducted by compute cycles and assures that content is kept close to end users geo locations.
+Outsmartly provides a mechanism that we call Overrides, which allow for modification of cached HTML within the CDN. This technique minimizes latency introduced by compute cycles and assures that content is kept close to end user's geographical location.
 
 ## HTTP/2 Server Push Above-the-fold Resources
 
