@@ -1,10 +1,16 @@
+//@ts-nocheck
 import { Command, flags } from '@oclif/command';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as vm from 'vm';
 import * as os from 'os';
+import { pipeline } from 'stream/promises';
 import chalk from 'chalk';
 import { prompt } from 'inquirer';
+import fetch, { Response } from 'node-fetch';
+import { AbortSignal } from 'node-fetch/externals';
+import * as tar from 'tar-stream';
+import gunzip from 'gunzip-maybe';
 import { rollup, OutputChunk, RollupError, RollupWarning, RollupCache, RollupBuild } from 'rollup';
 import rollupCommonJs from '@rollup/plugin-commonjs';
 import rollupJson from '@rollup/plugin-json';
@@ -15,13 +21,21 @@ import { terser as rollupTerser } from 'rollup-plugin-terser';
 import chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import cliSpinners from 'cli-spinners';
-import { AbortError } from 'node-fetch';
-import { AbortSignal } from 'node-fetch/externals';
 import ora from 'ora';
 import { AbortController } from 'abortcontroller-polyfill/dist/cjs-ponyfill';
 import multiline from 'multiline-template';
-import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite } from '../api';
+import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite, AnalysisByOrigin } from '../api';
 import { panic } from '../panic';
+
+type Environments = {
+  name: string;
+  origin: string;
+}[];
+
+type Origins = {
+  origin: string;
+  default?: boolean;
+}[];
 
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
 
@@ -523,6 +537,60 @@ export default class Deploy extends Command {
     }
   }
 
+  private async extractAnalysis(res: Response): Promise<Analysis | null> {
+    const analysisFiles: { [key: string]: string } = {};
+    const extract = tar.extract();
+
+    extract.on('entry', (header, stream, next) => {
+      if (header.type !== 'file') {
+        return next();
+      }
+
+      const data: Buffer[] = [];
+
+      stream
+        .on('data', (chunk) => {
+          data.push(Buffer.from(chunk));
+        })
+        .on('end', () => {
+          analysisFiles[header.name] = Buffer.concat(data).toString('utf8');
+          next();
+        });
+
+      stream.resume();
+    });
+
+    if (!res.body?.pipe) {
+      reject(new Error('Could not read body of response.'));
+      return;
+    }
+
+    await pipeline(res.body, gunzip(), extract, { signal: this.abortController.signal });
+
+    return analysisFiles;
+  }
+
+  private async bundleAllOrigins(origins: Origins): Promise<AnalysisByOrigin> {
+    return (
+      await Promise.all(
+        origins.map(async ({ origin, default: isDefault }) => {
+          const url = `${origin}/_outsmartly_artifacts.tar.gz`;
+          const response: Response = await fetch(url, { signal: this.abortController.signal });
+
+          if (!response.ok) {
+            throw new Error(`Could not download artifacts for ${origin}.`);
+          }
+
+          const analysis = await this.extractAnalysis(response);
+          return { origin, default: isDefault, analysis };
+        }),
+      )
+    ).reduce((analysisByOrigin: AnalysisByOrigin, { origin, default: isDefault, analysis }) => {
+      analysisByOrigin[origin] = { analysis, default: isDefault };
+      return analysisByOrigin;
+    }, {});
+  }
+
   async deploy(bearerToken: string, environment: string, configPath: string): Promise<void> {
     this.spinner.spinner = cliSpinners.dots12;
     this.spinner.color = 'blue';
@@ -549,20 +617,43 @@ export default class Deploy extends Command {
       const iife = vm.runInNewContext(`(function (module, exports) { ${chunk.code} });`, context, options);
       const module: any = { exports: {} };
       iife(module, module.exports);
-      const { host, tmpDir = './.outsmartly/' } = module.exports.default;
+      const { host, environments, origins }: { host: string; environments?: Environments; origins?: Origins } =
+        module.exports.default;
 
       if (!host) {
         throw new Error(`Missing 'host' field in ${configPath}`);
       }
+      if (Array.isArray(environments) && Array.isArray(origins)) {
+        throw new Error(`Cannot have both environments and origins defined in ${configPath}`);
+      }
 
-      const analysis = await this.bundleAnalysis(tmpDir);
+      let analysisByOrigin;
+
+      if (Array.isArray(origins)) {
+        analysisByOrigin = await this.bundleAllOrigins(origins);
+      } else if (Array.isArray(environments)) {
+        const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
+
+        if (!origin) {
+          throw new Error(`Missing 'production' environment in 'environments' in ${configPath}`);
+        }
+
+        analysisByOrigin = await this.bundleAllOrigins([{ origin, default: true }]);
+      }
+
+      if (!analysisByOrigin) {
+        throw new Error(`No artifacts found at origins in ${configPath}.`);
+      }
+
       this.spinner.spinner = spinnerClockwise;
       this.spinner.text = chalk.blue(`Deploying to Outsmartly... (${environment})`);
 
+      // TODO: Edge API/runtime must handle this new format and the old format
+      // e.g. check for analysis vs analysisByOrigin
       const sitePatch: PatchSite = {
         host,
         configRaw: chunk.code,
-        analysis,
+        analysisByOrigin,
       };
       const deployment = await patchSite(sitePatch, {
         bearerToken,
@@ -629,9 +720,9 @@ export default class Deploy extends Command {
       });
     } catch (e: any) {
       // aborting isn't actually an error, just ignore it and move on
-      if (e instanceof AbortError) {
-        return;
-      }
+      // if (e instanceof AbortError) {
+      //   return;
+      // }
 
       this.spinner.fail('Deploying failed');
 
