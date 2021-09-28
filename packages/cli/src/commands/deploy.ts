@@ -1,4 +1,3 @@
-//@ts-nocheck
 import { Command, flags } from '@oclif/command';
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -7,7 +6,7 @@ import * as os from 'os';
 import { pipeline } from 'stream/promises';
 import chalk from 'chalk';
 import { prompt } from 'inquirer';
-import fetch, { Response } from 'node-fetch';
+import fetch, { Response, AbortError } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 import * as tar from 'tar-stream';
 import gunzip from 'gunzip-maybe';
@@ -194,6 +193,8 @@ export default class Deploy extends Command {
   }
 
   async run() {
+    const foo = await import('node-fetch');
+    console.log(foo);
     const { args, flags } = this.parse(Deploy);
     this.flags = flags;
     const { config: customConfigPath, watch } = flags;
@@ -331,24 +332,15 @@ export default class Deploy extends Command {
     return { chunk, bundle };
   }
 
-  async bundleAnalysis(tmpDir: string): Promise<Analysis> {
-    if (!fs.existsSync(tmpDir)) {
-      return { components: {}, vfs: {} };
-    }
-
+  async bundleAnalysis(origin: string, artifacts: { [key: string]: string }): Promise<Analysis> {
     try {
       const input: { [key: string]: string } = {};
       const vfsForRollup: { [key: string]: string } = {};
       const components: { [key: string]: ComponentAnalysis } = {};
-      const analysisDir = path.join(tmpDir, 'analysis');
-      const componentAnalysisFilePaths = fs.readdirSync(analysisDir);
       let hasAnalysis = false;
 
-      const dependenciesDir = path.join(analysisDir, 'modules');
-
-      if (fs.existsSync(dependenciesDir)) {
-        for (const filename of fs.readdirSync(dependenciesDir)) {
-          const content = fs.readFileSync(path.join(dependenciesDir, filename), 'utf-8');
+      for (const [filePath, content] of Object.entries(artifacts)) {
+        if (path.dirname(filePath).endsWith('modules')) {
           const indexOfFirstNewline = content.indexOf('\n');
           const firstLine = content.slice(0, indexOfFirstNewline);
           const originalRelativePathComment = firstLine.match(/^\/\/ (.+)$/);
@@ -362,12 +354,9 @@ export default class Deploy extends Command {
           const originalModuleContent = content.slice(indexOfFirstNewline + 1);
           vfsForRollup[originalRelativePath] = originalModuleContent;
         }
-      }
 
-      for (const filePath of componentAnalysisFilePaths) {
         if (filePath.endsWith('.json')) {
           hasAnalysis = true;
-          const content = fs.readFileSync(path.join(analysisDir, filePath), 'utf-8');
           const component = JSON.parse(content);
           const { scope, filename, moduleThunkRaw } = component;
 
@@ -533,11 +522,11 @@ export default class Deploy extends Command {
       return { components, vfs };
     } catch (e) {
       console.error(e);
-      throw new Error(`Unexpected analysis results in ${tmpDir}.`);
+      throw new Error(`Unexpected analysis results for ${origin}.`);
     }
   }
 
-  private async extractAnalysis(res: Response): Promise<Analysis | null> {
+  private async extractAnalysis(res: Response): Promise<{ [key: string]: string }> {
     const analysisFiles: { [key: string]: string } = {};
     const extract = tar.extract();
 
@@ -561,8 +550,7 @@ export default class Deploy extends Command {
     });
 
     if (!res.body?.pipe) {
-      reject(new Error('Could not read body of response.'));
-      return;
+      throw new Error('Could not read body of response.');
     }
 
     await pipeline(res.body, gunzip(), extract, { signal: this.abortController.signal });
@@ -571,6 +559,10 @@ export default class Deploy extends Command {
   }
 
   private async bundleAllOrigins(origins: Origins): Promise<AnalysisByOrigin> {
+    if (!origins.length) {
+      console.log('Deploying without any defined origins. Is this intentional?');
+    }
+
     return (
       await Promise.all(
         origins.map(async ({ origin, default: isDefault }) => {
@@ -581,8 +573,9 @@ export default class Deploy extends Command {
             throw new Error(`Could not download artifacts for ${origin}.`);
           }
 
-          const analysis = await this.extractAnalysis(response);
-          return { origin, default: isDefault, analysis };
+          const artifactsMap = await this.extractAnalysis(response);
+          const bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
+          return { origin, default: isDefault, analysis: bundledAnalysis };
         }),
       )
     ).reduce((analysisByOrigin: AnalysisByOrigin, { origin, default: isDefault, analysis }) => {
@@ -621,24 +614,25 @@ export default class Deploy extends Command {
         module.exports.default;
 
       if (!host) {
-        throw new Error(`Missing 'host' field in ${configPath}`);
+        throw new Error(`Missing 'host' field in ${configPath}.`);
       }
-      if (Array.isArray(environments) && Array.isArray(origins)) {
-        throw new Error(`Cannot have both environments and origins defined in ${configPath}`);
+      if (typeof environments !== 'undefined' && typeof origins !== 'undefined') {
+        throw new Error(`Cannot have both environments and origins defined in ${configPath}.`);
       }
 
-      let analysisByOrigin;
-
+      let analysisByOrigin: AnalysisByOrigin;
       if (Array.isArray(origins)) {
         analysisByOrigin = await this.bundleAllOrigins(origins);
       } else if (Array.isArray(environments)) {
         const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
 
         if (!origin) {
-          throw new Error(`Missing 'production' environment in 'environments' in ${configPath}`);
+          throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
         }
 
         analysisByOrigin = await this.bundleAllOrigins([{ origin, default: true }]);
+      } else {
+        throw new Error(`Must have either environments or origins array defined in ${configPath}.`);
       }
 
       if (!analysisByOrigin) {
@@ -720,9 +714,9 @@ export default class Deploy extends Command {
       });
     } catch (e: any) {
       // aborting isn't actually an error, just ignore it and move on
-      // if (e instanceof AbortError) {
-      //   return;
-      // }
+      if (e instanceof AbortError) {
+        return;
+      }
 
       this.spinner.fail('Deploying failed');
 
