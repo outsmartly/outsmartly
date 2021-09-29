@@ -193,8 +193,6 @@ export default class Deploy extends Command {
   }
 
   async run() {
-    const foo = await import('node-fetch');
-    console.log(foo);
     const { args, flags } = this.parse(Deploy);
     this.flags = flags;
     const { config: customConfigPath, watch } = flags;
