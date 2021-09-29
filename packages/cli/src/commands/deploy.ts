@@ -525,6 +525,10 @@ export default class Deploy extends Command {
   }
 
   private async extractAnalysis(res: Response): Promise<{ [key: string]: string }> {
+    if (!res.body?.pipe) {
+      throw new Error('Could not read body of response.');
+    }
+
     const analysisFiles: { [key: string]: string } = {};
     const extract = tar.extract();
 
@@ -546,10 +550,6 @@ export default class Deploy extends Command {
 
       stream.resume();
     });
-
-    if (!res.body?.pipe) {
-      throw new Error('Could not read body of response.');
-    }
 
     await pipeline(res.body, gunzip(), extract, { signal: this.abortController.signal });
 
