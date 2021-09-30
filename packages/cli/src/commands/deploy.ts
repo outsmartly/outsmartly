@@ -620,6 +620,12 @@ export default class Deploy extends Command {
 
       let analysisByOrigin: AnalysisByOrigin;
       if (Array.isArray(origins)) {
+        const hasDefaultOrigin = origins.some((origin) => origin.default === true);
+
+        if (!hasDefaultOrigin) {
+          throw new Error(`Missing default origin in 'origins' in ${configPath}.`);
+        }
+
         analysisByOrigin = await this.bundleAllOrigins(origins);
       } else if (Array.isArray(environments)) {
         const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
