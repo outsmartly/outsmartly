@@ -41,6 +41,7 @@ type Environments = {
 
 type Remotes = {
   origin: string;
+  artifacts?: boolean;
   default?: boolean;
 }[];
 
@@ -571,8 +572,12 @@ export default class Deploy extends Command {
 
     return (
       await Promise.all(
-        remotes.map(async ({ origin, default: isDefault }) => {
-          const url = `${origin}/_outsmartly_artifacts.tar.gz`;
+        remotes.map(async ({ origin, default: isDefault, artifacts }) => {
+          if (!artifacts) {
+            return { origin, default: isDefault };
+          }
+
+          const url = `${origin}/_outsmartly_artifacts.tgz`;
           const response: Response = await fetch(url, { signal: this.abortController.signal });
           let bundledAnalysis;
 
@@ -580,7 +585,9 @@ export default class Deploy extends Command {
             const artifactsMap = await this.extractAnalysis(response);
             bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
           } else {
-            console.error(`WARNING: Could not download artifacts for ${origin}. Was this intentional?`);
+            throw new Error(
+              `Could not download artifacts for ${origin}.\nIf this is expected, please add artifacts: false to the remote entry for ${origin}.`,
+            );
           }
 
           return { origin, default: isDefault, analysis: bundledAnalysis };
