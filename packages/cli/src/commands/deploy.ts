@@ -566,28 +566,23 @@ export default class Deploy extends Command {
   }
 
   private async bundleArtifactsByOrigin(remotes: Remotes): Promise<CompileTimeArtifactsByOrigin> {
-    if (!remotes.length) {
-      console.log('Deploying without any defined remotes. Is this intentional?');
-    }
-
     return (
       await Promise.all(
-        remotes.map(async ({ origin, default: isDefault, artifacts }) => {
-          if (!artifacts) {
-            return { origin, default: isDefault };
-          }
+        remotes.map(async ({ origin, default: isDefault = false, artifacts = true }) => {
+          let bundledAnalysis = null;
 
-          const url = `${origin}/_outsmartly_artifacts.tgz`;
-          const response: Response = await fetch(url, { signal: this.abortController.signal });
-          let bundledAnalysis;
+          if (artifacts) {
+            const url = `${origin}/_outsmartly_artifacts.tgz`;
+            const response: Response = await fetch(url, { signal: this.abortController.signal });
 
-          if (response.ok) {
-            const artifactsMap = await this.extractAnalysis(response);
-            bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
-          } else {
-            throw new Error(
-              `Could not download artifacts for ${origin}.\nIf this is expected, please add artifacts: false to the remote entry for ${origin}.`,
-            );
+            if (response.ok) {
+              const artifactsMap = await this.extractAnalysis(response);
+              bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
+            } else {
+              throw new Error(
+                `Could not download artifacts for ${origin}.\nIf this is expected, please add artifacts: false to the remote entry for ${origin}.`,
+              );
+            }
           }
 
           return { origin, default: isDefault, analysis: bundledAnalysis };
@@ -637,16 +632,22 @@ export default class Deploy extends Command {
 
       let compileTimeArtifactsByOrigin: CompileTimeArtifactsByOrigin;
       if (Array.isArray(remotes)) {
-        const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
+        if (!remotes.length) {
+          console.log('WARNING: Deploying without any defined remotes. Is this intentional?');
+        }
 
+        const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
         if (!hasDefaultOrigin) {
           throw new Error(`Missing default origin in 'remotes' in ${configPath}.`);
         }
 
         compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin(remotes);
       } else if (Array.isArray(environments)) {
-        const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
+        if (!environments.length) {
+          console.log('WARNING: Deploying without any defined environments. Is this intentional?');
+        }
 
+        const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
         if (!origin) {
           throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
         }

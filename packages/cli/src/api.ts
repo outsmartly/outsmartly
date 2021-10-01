@@ -143,16 +143,15 @@ export interface Analysis {
 
 export interface CompileTimeArtifactsByOrigin {
   [key: string]: {
-    analysis?: Analysis;
-    default?: boolean;
+    default: boolean;
+    analysis: Analysis | null;
   };
 }
 
 export interface PatchSite {
   host: string;
   configRaw?: string;
-  analysis?: Analysis; // Old format
-  compileTimeArtifactsByOrigin?: CompileTimeArtifactsByOrigin;
+  compileTimeArtifactsByOrigin: CompileTimeArtifactsByOrigin;
 }
 
 export async function patchSite(
