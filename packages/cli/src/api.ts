@@ -141,9 +141,9 @@ export interface Analysis {
   vfs: { [key: string]: string };
 }
 
-export interface AnalysisByOrigin {
+export interface CompileTimeArtifactsByOrigin {
   [key: string]: {
-    analysis: Analysis;
+    analysis?: Analysis;
     default?: boolean;
   };
 }
@@ -152,7 +152,7 @@ export interface PatchSite {
   host: string;
   configRaw?: string;
   analysis?: Analysis; // Old format
-  analysisByOrigin?: AnalysisByOrigin;
+  compileTimeArtifactsByOrigin?: CompileTimeArtifactsByOrigin;
 }
 
 export async function patchSite(

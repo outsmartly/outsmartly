@@ -23,7 +23,15 @@ import cliSpinners from 'cli-spinners';
 import ora from 'ora';
 import { AbortController } from 'abortcontroller-polyfill/dist/cjs-ponyfill';
 import multiline from 'multiline-template';
-import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite, AnalysisByOrigin } from '../api';
+import {
+  Analysis,
+  APIError,
+  apiFetch,
+  ComponentAnalysis,
+  patchSite,
+  PatchSite,
+  CompileTimeArtifactsByOrigin,
+} from '../api';
 import { panic } from '../panic';
 
 type Environments = {
@@ -31,16 +39,16 @@ type Environments = {
   origin: string;
 }[];
 
-type Origins = {
+type Remotes = {
   origin: string;
   default?: boolean;
 }[];
 
+const ABSOLUTE_PATH_REGEX = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
 
-const absolutePath = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 function isAbsolute(path: string) {
-  return absolutePath.test(path);
+  return ABSOLUTE_PATH_REGEX.test(path);
 }
 
 function relativeId(id: string) {
@@ -556,29 +564,31 @@ export default class Deploy extends Command {
     return analysisFiles;
   }
 
-  private async bundleAllOrigins(origins: Origins): Promise<AnalysisByOrigin> {
-    if (!origins.length) {
-      console.log('Deploying without any defined origins. Is this intentional?');
+  private async bundleArtifactsByOrigin(remotes: Remotes): Promise<CompileTimeArtifactsByOrigin> {
+    if (!remotes.length) {
+      console.log('Deploying without any defined remotes. Is this intentional?');
     }
 
     return (
       await Promise.all(
-        origins.map(async ({ origin, default: isDefault }) => {
+        remotes.map(async ({ origin, default: isDefault }) => {
           const url = `${origin}/_outsmartly_artifacts.tar.gz`;
           const response: Response = await fetch(url, { signal: this.abortController.signal });
+          let bundledAnalysis;
 
-          if (!response.ok) {
-            throw new Error(`Could not download artifacts for ${origin}.`);
+          if (response.ok) {
+            const artifactsMap = await this.extractAnalysis(response);
+            bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
+          } else {
+            console.error(`WARNING: Could not download artifacts for ${origin}. Was this intentional?`);
           }
 
-          const artifactsMap = await this.extractAnalysis(response);
-          const bundledAnalysis = await this.bundleAnalysis(origin, artifactsMap);
           return { origin, default: isDefault, analysis: bundledAnalysis };
         }),
       )
-    ).reduce((analysisByOrigin: AnalysisByOrigin, { origin, default: isDefault, analysis }) => {
-      analysisByOrigin[origin] = { analysis, default: isDefault };
-      return analysisByOrigin;
+    ).reduce((compileTimeArtifactsByOrigin: CompileTimeArtifactsByOrigin, { origin, default: isDefault, analysis }) => {
+      compileTimeArtifactsByOrigin[origin] = { analysis, default: isDefault };
+      return compileTimeArtifactsByOrigin;
     }, {});
   }
 
@@ -608,25 +618,25 @@ export default class Deploy extends Command {
       const iife = vm.runInNewContext(`(function (module, exports) { ${chunk.code} });`, context, options);
       const module: any = { exports: {} };
       iife(module, module.exports);
-      const { host, environments, origins }: { host: string; environments?: Environments; origins?: Origins } =
+      const { host, environments, remotes }: { host: string; environments?: Environments; remotes?: Remotes } =
         module.exports.default;
 
       if (!host) {
         throw new Error(`Missing 'host' field in ${configPath}.`);
       }
-      if (typeof environments !== 'undefined' && typeof origins !== 'undefined') {
-        throw new Error(`Cannot have both environments and origins defined in ${configPath}.`);
+      if (typeof environments !== 'undefined' && typeof remotes !== 'undefined') {
+        throw new Error(`Cannot have both environments and remotes defined in ${configPath}.`);
       }
 
-      let analysisByOrigin: AnalysisByOrigin;
-      if (Array.isArray(origins)) {
-        const hasDefaultOrigin = origins.some((origin) => origin.default === true);
+      let compileTimeArtifactsByOrigin: CompileTimeArtifactsByOrigin;
+      if (Array.isArray(remotes)) {
+        const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
 
         if (!hasDefaultOrigin) {
-          throw new Error(`Missing default origin in 'origins' in ${configPath}.`);
+          throw new Error(`Missing default origin in 'remotes' in ${configPath}.`);
         }
 
-        analysisByOrigin = await this.bundleAllOrigins(origins);
+        compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin(remotes);
       } else if (Array.isArray(environments)) {
         const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
 
@@ -634,24 +644,22 @@ export default class Deploy extends Command {
           throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
         }
 
-        analysisByOrigin = await this.bundleAllOrigins([{ origin, default: true }]);
+        compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin([{ origin, default: true }]);
       } else {
-        throw new Error(`Must have either environments or origins array defined in ${configPath}.`);
+        throw new Error(`Must have either environments or remotes array defined in ${configPath}.`);
       }
 
-      if (!analysisByOrigin) {
+      if (!compileTimeArtifactsByOrigin) {
         throw new Error(`No artifacts found at origins in ${configPath}.`);
       }
 
       this.spinner.spinner = spinnerClockwise;
       this.spinner.text = chalk.blue(`Deploying to Outsmartly... (${environment})`);
 
-      // TODO: Edge API/runtime must handle this new format and the old format
-      // e.g. check for analysis vs analysisByOrigin
       const sitePatch: PatchSite = {
         host,
         configRaw: chunk.code,
-        analysisByOrigin,
+        compileTimeArtifactsByOrigin,
       };
       const deployment = await patchSite(sitePatch, {
         bearerToken,
