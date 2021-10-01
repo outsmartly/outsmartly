@@ -632,7 +632,7 @@ export default class Deploy extends Command {
         throw new Error(`Missing 'host' field in ${configPath}.`);
       }
       if (typeof environments !== 'undefined' && typeof remotes !== 'undefined') {
-        throw new Error(`Cannot have both environments and remotes defined in ${configPath}.`);
+        throw new Error(`Cannot have both 'environments' and 'remotes' defined in ${configPath}.`);
       }
 
       let compileTimeArtifactsByOrigin: CompileTimeArtifactsByOrigin;
@@ -651,9 +651,9 @@ export default class Deploy extends Command {
           throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
         }
 
-        compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin([{ origin, default: true }]);
+        compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin([{ origin, default: true, artifacts: true }]);
       } else {
-        throw new Error(`Must have either environments or remotes array defined in ${configPath}.`);
+        throw new Error(`Must have either 'environments' or 'remotes' array defined in ${configPath}.`);
       }
 
       if (!compileTimeArtifactsByOrigin) {
