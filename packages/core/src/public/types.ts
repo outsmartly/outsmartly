@@ -172,6 +172,23 @@ export interface Environment {
   origin: string;
 }
 
+export interface Remote {
+  /**
+   * Your origin is where Outsmartly's CDN proxies requests to.
+   * Here are some examples:
+   *
+   *   https://my-site.vercel.app
+   *   https://my-site.netlify.app
+   *   http://my-site.s3-website.us-east-2.amazonaws.com
+   *
+   * It's important to note that it DOES include the protocol/scheme,
+   * such as `https://` but it does NOT include any path.
+   */
+  origin: string;
+  default?: boolean;
+  artifacts?: boolean;
+}
+
 export interface Middleware {
   (event: OutsmartlyMiddlewareEvent, next: (request?: Request) => PromiseOrValue<Response>): PromiseOrValue<Response>;
   displayName?: string;
@@ -261,10 +278,7 @@ export interface Plugin {
    * For example, `middleware` and `routes` will always be defined, even if
    * they weren't originally provided in the outsmartly.config.js used.
    */
-  setup?(context: {
-    config: Required<OutsmartlyConfig>;
-    messageBus: EdgeMessageBus
-  }): void;
+  setup?(context: { config: Required<OutsmartlyConfig>; messageBus: EdgeMessageBus }): void;
 }
 
 export interface OutsmartlyConfig {
@@ -274,10 +288,17 @@ export interface OutsmartlyConfig {
   host: string;
 
   /**
+   * The possible deployment remotes.
+   * @see Remote
+   */
+  remotes?: Remote[];
+
+  /**
    * The possible deployment environments.
+   * @deprecated in favor of remotes.
    * @see Environment
    */
-  environments: Environment[];
+  environments?: Environment[];
 
   /**
    * Optional plugins made for Outsmartly's edge
