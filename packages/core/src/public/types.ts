@@ -277,8 +277,11 @@ export interface Plugin {
    *
    * For example, `middleware` and `routes` will always be defined, even if
    * they weren't originally provided in the outsmartly.config.js used.
+   *
+   * Additionally, the now deprecated `environments` will be massaged into the
+   * the new `remotes` format that replaces it.
    */
-  setup?(context: { config: Required<OutsmartlyConfig>; messageBus: EdgeMessageBus }): void;
+  setup?(context: { config: Omit<OutsmartlyConfig, 'environments'>; messageBus: EdgeMessageBus }): void;
 }
 
 export interface OutsmartlyConfig {
