@@ -33,17 +33,7 @@ import {
   CompileTimeArtifactsByOrigin,
 } from '../api';
 import { warn, panic } from '../utils';
-
-type Environments = {
-  name: string;
-  origin: string;
-}[];
-
-type Remotes = {
-  origin: string;
-  artifacts?: boolean;
-  default?: boolean;
-}[];
+import type { OutsmartlyConfig, Remote } from '@outsmartly/core';
 
 const ABSOLUTE_PATH_REGEX = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
@@ -128,15 +118,6 @@ export default class Deploy extends Command {
     }),
   };
 
-  static args = [
-    {
-      name: 'environment',
-      required: true,
-      description: "Environment you want to deploy to. Currently only supports 'production'.",
-      options: ['production'],
-    },
-  ];
-
   flags!: Flags;
   watcher?: FSWatcher;
   pendingDeployCount = 0;
@@ -202,10 +183,9 @@ export default class Deploy extends Command {
   }
 
   async run() {
-    const { args, flags } = this.parse(Deploy);
+    const { flags } = this.parse(Deploy);
     this.flags = flags;
     const { config: customConfigPath, watch } = flags;
-    const { environment } = args;
 
     const bearerToken = await this.findBearerToken();
     const configFullPath = this.findOutsmartlyConfigPath(customConfigPath);
@@ -224,12 +204,12 @@ export default class Deploy extends Command {
           return;
         }
 
-        await this.deploy(bearerToken, environment, configFullPath);
+        await this.deploy(bearerToken, configFullPath);
       });
     }
 
     this.pendingDeployCount++;
-    await this.deploy(bearerToken, environment, configFullPath);
+    await this.deploy(bearerToken, configFullPath);
   }
 
   setupWatchers(): void {
@@ -337,70 +317,6 @@ export default class Deploy extends Command {
     const chunk = output[0];
 
     return { chunk, bundle };
-  }
-
-  async bundleAnalysisForEnvironment(tmpDir: string): Promise<Analysis> {
-    if (!fs.existsSync(tmpDir)) {
-      return { components: {}, vfs: {} };
-    }
-
-    try {
-      const input: { [key: string]: string } = {};
-      const vfsForRollup: { [key: string]: string } = {};
-      const components: { [key: string]: ComponentAnalysis } = {};
-      const analysisDir = path.join(tmpDir, 'analysis');
-      const componentAnalysisFilePaths = fs.readdirSync(analysisDir);
-      let hasAnalysis = false;
-
-      const dependenciesDir = path.join(analysisDir, 'modules');
-
-      if (fs.existsSync(dependenciesDir)) {
-        for (const filename of fs.readdirSync(dependenciesDir)) {
-          const content = fs.readFileSync(path.join(dependenciesDir, filename), 'utf-8');
-          const indexOfFirstNewline = content.indexOf('\n');
-          const firstLine = content.slice(0, indexOfFirstNewline);
-          const originalRelativePathComment = firstLine.match(/^\/\/ (.+)$/);
-          if (!originalRelativePathComment) {
-            throw new Error(`Malformed path for module: ${firstLine}`);
-          }
-          const originalRelativePath = originalRelativePathComment[1];
-          if (originalRelativePath.startsWith('node_modules/')) {
-            continue;
-          }
-          const originalModuleContent = content.slice(indexOfFirstNewline + 1);
-          vfsForRollup[originalRelativePath] = originalModuleContent;
-        }
-      }
-
-      for (const filePath of componentAnalysisFilePaths) {
-        if (filePath.endsWith('.json')) {
-          hasAnalysis = true;
-          const content = fs.readFileSync(path.join(analysisDir, filePath), 'utf-8');
-          const component = JSON.parse(content);
-          const { scope, filename, moduleThunkRaw } = component;
-
-          const virtualFilePath = `${filename}`;
-          const filenameWithOutExt = filename.slice(0, filename.lastIndexOf('.'));
-
-          input[filenameWithOutExt] = filename;
-          vfsForRollup[virtualFilePath] = moduleThunkRaw;
-          // No need to send this to the server now as the vfs
-          // has the end result of it.
-          component.moduleThunkRaw = null;
-          components[scope] = component;
-        }
-      }
-
-      // No components were analyized, so don't go further cause Rollup will
-      // die a horrible death.
-      if (!hasAnalysis) {
-        return { components: {}, vfs: {} };
-      }
-
-      return this.rollupOutsmartlyAnalysisFiles(tmpDir, input, vfsForRollup, components);
-    } catch (err) {
-      throw new Error(`Could not bundle analysis from ${tmpDir}.`);
-    }
   }
 
   async bundleArtifactsForOrigin(origin: string, artifacts: { [key: string]: string }): Promise<Analysis> {
@@ -633,7 +549,7 @@ export default class Deploy extends Command {
     return analysisFiles;
   }
 
-  private async bundleArtifactsByOrigin(remotes: Remotes): Promise<CompileTimeArtifactsByOrigin> {
+  private async bundleArtifactsByOrigin(remotes: Remote[]): Promise<CompileTimeArtifactsByOrigin> {
     return (
       await Promise.all(
         remotes.map(async ({ origin, artifacts = true }) => {
@@ -668,61 +584,42 @@ export default class Deploy extends Command {
     code,
     configPath,
     host,
-    environments,
     remotes,
-    tmpDir = './.outsmartly/',
   }: {
     code: string;
     configPath: string;
     host: string;
-    environments?: Environments;
-    remotes?: Remotes;
-    tmpDir?: string;
+    remotes?: Remote[];
   }): Promise<PatchSite> {
-    if (typeof environments !== 'undefined' && typeof remotes !== 'undefined') {
-      throw new Error(`Cannot have both 'environments' and 'remotes' defined in ${configPath}.`);
-    }
-
     const sitePatch: PatchSite = {
       host,
       configRaw: code,
     };
 
-    if (Array.isArray(remotes)) {
-      if (!remotes.length) {
-        warn('Deploying without any defined remotes.');
-      }
-
-      const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
-      if (!hasDefaultOrigin) {
-        throw new Error(`Missing default origin in 'remotes' in ${configPath}.`);
-      }
-
-      const compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin(remotes);
-      if (!compileTimeArtifactsByOrigin) {
-        throw new Error(`No artifacts found at origins in ${configPath}.`);
-      }
-
-      sitePatch.compileTimeArtifactsByOrigin = compileTimeArtifactsByOrigin;
-    } else if (Array.isArray(environments)) {
-      if (!environments.length) {
-        warn('Deploying without any defined environments.');
-      }
-
-      const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
-      if (!origin) {
-        throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
-      }
-
-      sitePatch.analysis = await this.bundleAnalysisForEnvironment(tmpDir);
-    } else {
-      throw new Error(`Must have either 'environments' or 'remotes' array defined in ${configPath}.`);
+    if (!Array.isArray(remotes)) {
+      throw new Error(`'remotes' must be defined in ${configPath} to deploy.`);
     }
+
+    if (!remotes.length) {
+      warn(`Deploying without any defined remotes in ${configPath}.`);
+    }
+
+    const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
+    if (!hasDefaultOrigin) {
+      throw new Error(`Missing default origin in 'remotes' in ${configPath}.`);
+    }
+
+    const compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin(remotes);
+    if (!compileTimeArtifactsByOrigin) {
+      throw new Error(`No artifacts found at origins in ${configPath}.`);
+    }
+
+    sitePatch.compileTimeArtifactsByOrigin = compileTimeArtifactsByOrigin;
 
     return sitePatch;
   }
 
-  async deploy(bearerToken: string, environment: string, configPath: string): Promise<void> {
+  async deploy(bearerToken: string, configPath: string): Promise<void> {
     // If there's a pending deploy let's give up on this one
     if (this.pendingDeployCount > 1) {
       return;
@@ -750,12 +647,7 @@ export default class Deploy extends Command {
 
       bundledConfigIife(module, module.exports);
 
-      const {
-        host,
-        environments,
-        remotes,
-        tmpDir,
-      }: { host: string; environments?: Environments; remotes?: Remotes; tmpDir?: string } = module.exports.default;
+      const { host, remotes }: OutsmartlyConfig = module.exports.default;
 
       if (!host) {
         throw new Error(`Missing 'host' field in ${configPath}.`);
@@ -765,13 +657,11 @@ export default class Deploy extends Command {
         configPath,
         code: chunk.code,
         host,
-        environments,
         remotes,
-        tmpDir,
       });
 
       this.spinner.spinner = spinnerClockwise;
-      this.spinner.text = chalk.blue(`Deploying to Outsmartly... (${environment})`);
+      this.spinner.text = chalk.blue(`Deploying to Outsmartly...`);
 
       const deployment = await patchSite(sitePatch, {
         bearerToken,
@@ -834,7 +724,7 @@ export default class Deploy extends Command {
 
       this.spinner.stopAndPersist({
         symbol: '🚀',
-        text: chalk.green(`Deployed to Outsmartly (${environment}) https://${host}/`),
+        text: chalk.green(`Deployed to Outsmartly: https://${host}/`),
       });
     } catch (e: any) {
       // aborting isn't actually an error, just ignore it and move on
@@ -871,7 +761,7 @@ export default class Deploy extends Command {
       // need to do another one now.
       if (this.pendingDeployCount > 1) {
         this.pendingDeployCount = 1;
-        await this.deploy(bearerToken, environment, configPath);
+        await this.deploy(bearerToken, configPath);
       } else {
         this.pendingDeployCount = 0;
         if (this.flags.watch) {
