@@ -152,26 +152,6 @@ export declare class OutsmartlyOverrideEvent extends OutsmartlyEdgeRequestEvent 
   getComponentArguments<R extends unknown[]>(): Promise<R>;
 }
 
-export interface Environment {
-  /**
-   * Currently, only `name: 'production'` is supported.
-   */
-  name: 'production';
-
-  /**
-   * Your origin is where Outsmartly's CDN proxies requests to.
-   * Here are some examples:
-   *
-   *   https://my-site.vercel.app
-   *   https://my-site.netlify.app
-   *   http://my-site.s3-website.us-east-2.amazonaws.com
-   *
-   * It's important to note that it DOES include the protocol/scheme,
-   * such as `https://` but it does NOT include any path.
-   */
-  origin: string;
-}
-
 export interface Remote {
   /**
    * Your origin is where Outsmartly's CDN proxies requests to.
@@ -292,13 +272,6 @@ export interface OutsmartlyConfig {
    * @see Remote
    */
   remotes?: Remote[];
-
-  /**
-   * The possible deployment environments.
-   * @deprecated in favor of remotes.
-   * @see Environment
-   */
-  environments?: Environment[];
 
   /**
    * Optional plugins made for Outsmartly's edge
