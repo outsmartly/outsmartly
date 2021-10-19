@@ -152,7 +152,12 @@ export declare class OutsmartlyOverrideEvent extends OutsmartlyEdgeRequestEvent 
   getComponentArguments<R extends unknown[]>(): Promise<R>;
 }
 
-export interface Remote {
+export interface Environment {
+  /**
+   * Currently, only `name: 'production'` is supported.
+   */
+  name: 'production';
+
   /**
    * Your origin is where Outsmartly's CDN proxies requests to.
    * Here are some examples:
@@ -165,8 +170,6 @@ export interface Remote {
    * such as `https://` but it does NOT include any path.
    */
   origin: string;
-  default?: boolean;
-  artifacts?: boolean;
 }
 
 export interface Middleware {
@@ -268,10 +271,10 @@ export interface OutsmartlyConfig {
   host: string;
 
   /**
-   * The possible deployment remotes.
-   * @see Remote
+   * The possible deployment environments.
+   * @see Environment
    */
-  remotes?: Remote[];
+  environments: Environment[];
 
   /**
    * Optional plugins made for Outsmartly's edge
