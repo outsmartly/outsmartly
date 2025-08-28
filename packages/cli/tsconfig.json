@@ -11,7 +11,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "composite": true,
-    "types": ["@types/node", "@types/jest", "@types/fs-extra", "@types/inquirer", "@types/node-fetch"]
+    "types": ["@types/node", "@types/jest", "@types/fs-extra", "@types/inquirer", "@types/node-fetch"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }

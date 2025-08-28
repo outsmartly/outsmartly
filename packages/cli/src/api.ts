@@ -1,8 +1,7 @@
 import fetch, { Response, Headers, RequestInit } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 
-const origin =
-  process.env.OUTSMARTLY_API_ORIGIN ?? 'https://api.edgebailey.com';
+const origin = process.env.OUTSMARTLY_API_ORIGIN ?? 'https://api.edgebailey.com';
 
 export class APIError extends Error {
   constructor(public response: Response, public json: any) {
@@ -31,10 +30,7 @@ export interface APIFetchOptions {
   init?: RequestInit;
 }
 
-export async function apiFetch<R>(
-  url: string,
-  options: APIFetchOptions,
-): Promise<R> {
+export async function apiFetch<R>(url: string, options: APIFetchOptions): Promise<R> {
   const { bearerToken, cliVersion, signal = null, init } = options;
   const headers = new Headers(init?.headers);
   const platform = `(${process.platform}; ${process.arch})`;
@@ -64,10 +60,8 @@ export async function apiFetch<R>(
     // Thus far this only happens when Cloudflare itself is having issues in some form or another.
     // In general, it's not a good sign since we should *always* get JSON even when there are errors
     // as long as they were handled by the API server.
-    if (
-      text.trim().startsWith('<!DOCTYPE html>') &&
-      !process.env.OUTSMARTLY_INTERNAL_DEBUG
-    ) {
+    if (text.trim().startsWith('<!DOCTYPE html>') &&
+        !process.env.OUTSMARTLY_INTERNAL_DEBUG) {
       throw new Error(
         `API request to ${url} failed. Malformed response from server. ${e.message}\n HTTP Status: ${resp.status}\n\n <UNEXPECTED_SERVER_RESPONSE_HTML>`,
       );

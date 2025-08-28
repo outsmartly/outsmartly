@@ -41,9 +41,7 @@ export default class Login extends Command {
     });
     const { port } = server.address();
 
-    const issuer = await Issuer.discover(
-      'https://outsmartly.us.auth0.com/.well-known/openid-configuration',
-    );
+    const issuer = await Issuer.discover('https://outsmartly.us.auth0.com/.well-known/openid-configuration');
 
     const client = new issuer.Client({
       client_id: 'xiOTmRnhCijHhEK3Ij20W4yonuETY5c0',
@@ -73,11 +71,7 @@ export default class Login extends Command {
     });
     server.close();
 
-    const tokenSet = await client.oauthCallback(
-      'https://www.edgebailey.com/',
-      params,
-      { code_verifier },
-    );
+    const tokenSet = await client.oauthCallback('https://www.edgebailey.com/', params, { code_verifier });
     console.log(tokenSet);
     const user = await client.userinfo(tokenSet.access_token!);
     console.log(user);
