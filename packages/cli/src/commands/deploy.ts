@@ -3,8 +3,12 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as vm from 'vm';
 import * as os from 'os';
+import { pipeline } from 'stream/promises';
 import chalk from 'chalk';
 import { prompt } from 'inquirer';
+import nodeFetch, { AbortError } from 'node-fetch'
+import * as tar from 'tar-stream';
+import gunzip from 'gunzip-maybe';
 import { rollup, OutputChunk, RollupError, RollupWarning, RollupCache, RollupBuild } from 'rollup';
 import rollupCommonJs from '@rollup/plugin-commonjs';
 import rollupJson from '@rollup/plugin-json';
@@ -15,19 +19,18 @@ import { terser as rollupTerser } from 'rollup-plugin-terser';
 import chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import cliSpinners from 'cli-spinners';
-import { AbortError } from 'node-fetch';
 import { AbortSignal } from 'node-fetch/externals';
 import ora from 'ora';
 import { AbortController } from 'abortcontroller-polyfill/dist/cjs-ponyfill';
 import multiline from 'multiline-template';
 import { Analysis, APIError, apiFetch, ComponentAnalysis, patchSite, PatchSite } from '../api';
-import { panic } from '../panic';
+import { panic, warn } from '../utils';
 
+const ABSOLUTE_PATH_REGEX = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 const SUPPORTED_EXTENSIONS = ['.js', '.jsx', '.mjs', '.mjsx', '.cjs', '.cjsx', '.ts', '.tsx'];
 
-const absolutePath = /^(?:\/|(?:[A-Za-z]:)?[\\|/])/;
 function isAbsolute(path: string) {
-  return absolutePath.test(path);
+  return ABSOLUTE_PATH_REGEX.test(path);
 }
 
 function relativeId(id: string) {
@@ -317,7 +320,7 @@ export default class Deploy extends Command {
     return { chunk, bundle };
   }
 
-  async bundleAnalysis(tmpDir: string): Promise<Analysis> {
+  async bundleAnalysisForEnvironment(tmpDir: string): Promise<Analysis> {
     if (!fs.existsSync(tmpDir)) {
       return { components: {}, vfs: {} };
     }
@@ -375,6 +378,77 @@ export default class Deploy extends Command {
         return { components: {}, vfs: {} };
       }
 
+      return this.rollupOutsmartlyAnalysisFiles(tmpDir, input, vfsForRollup, components);
+    } catch (err) {
+      throw new Error(`Could not bundle analysis from ${tmpDir}.`);
+    }
+  }
+
+  async bundleArtifactsForOrigin(origin: string, artifacts: { [key: string]: string }): Promise<Analysis> {
+    try {
+      const input: { [key: string]: string } = {};
+      const vfsForRollup: { [key: string]: string } = {};
+      const components: { [key: string]: ComponentAnalysis } = {};
+      let hasAnalysis = false;
+
+      for (const [filePath, content] of Object.entries(artifacts)) {
+        if (path.dirname(filePath).endsWith('modules')) {
+          const indexOfFirstNewline = content.indexOf('\n');
+          const firstLine = content.slice(0, indexOfFirstNewline);
+          const originalRelativePathComment = firstLine.match(/^\/\/ (.+)$/);
+          if (!originalRelativePathComment) {
+            throw new Error(`Malformed path for module: ${firstLine}`);
+          }
+          const originalRelativePath = originalRelativePathComment[1];
+          if (originalRelativePath.startsWith('node_modules/')) {
+            continue;
+          }
+          const originalModuleContent = content.slice(indexOfFirstNewline + 1);
+          vfsForRollup[originalRelativePath] = originalModuleContent;
+        }
+        if (filePath.endsWith('.json')) {
+          hasAnalysis = true;
+          const component = JSON.parse(content);
+          const { scope, filename, moduleThunkRaw } = component;
+
+          const virtualFilePath = `${filename}`;
+          const filenameWithOutExt = filename.slice(0, filename.lastIndexOf('.'));
+
+          input[filenameWithOutExt] = filename;
+          vfsForRollup[virtualFilePath] = moduleThunkRaw;
+          // No need to send this to the server now as the vfs
+          // has the end result of it.
+          component.moduleThunkRaw = null;
+          components[scope] = component;
+        }
+      }
+
+      // No components were analyized, so don't go further cause Rollup will
+      // die a horrible death.
+      if (!hasAnalysis) {
+        return { components: {}, vfs: {} };
+      }
+
+      return this.rollupOutsmartlyAnalysisFiles(origin, input, vfsForRollup, components);
+    } catch (err) {
+      throw new Error(`Could not bundle analysis from ${origin}.`);
+    }
+  }
+
+  async rollupOutsmartlyAnalysisFiles(
+    analysisLoc: string,
+    input: { [key: string]: string },
+    vfsForRollup: { [key: string]: string },
+    components: { [key: string]: ComponentAnalysis },
+  ): Promise<{
+    components: {
+      [key: string]: ComponentAnalysis;
+    };
+    vfs: {
+      [key: string]: string;
+    };
+  }> {
+    try {
       const bundle = await rollup({
         input,
         external: ['react'],
@@ -480,15 +554,6 @@ export default class Deploy extends Command {
       const { output } = await bundle.generate({
         format: 'cjs',
         exports: 'named',
-        /* manualChunks(id, { getModuleInfo, getModuleIds }) {
-          const relativePath = path.relative(process.cwd(), id);
-          if (relativePath.startsWith('node_modules')) {
-            return relativePath
-              .replace(/^(node_modules\/[^/]+\/).+$/, '$1')
-              .replace(/-/gm, '--')
-              .replace(/\//gm, '-');
-          }
-        }, */
       });
 
       const vfs: { [key: string]: string } = {};
@@ -519,11 +584,129 @@ export default class Deploy extends Command {
       return { components, vfs };
     } catch (e) {
       console.error(e);
-      throw new Error(`Unexpected analysis results in ${tmpDir}.`);
+      throw new Error(`Unexpected analysis results for ${analysisLoc}.`);
     }
   }
 
+  private async extractArtifacts(res: nodeFetch.Response): Promise<{ [key: string]: string }> {
+    if (!res.body?.pipe) {
+      throw new Error('Could not read body of response.');
+    }
+
+    const analysisFiles: { [key: string]: string } = {};
+    const extract = tar.extract();
+
+    extract.on('entry', (header, stream, next) => {
+      if (header.type !== 'file') {
+        return next();
+      }
+
+      const data: Buffer[] = [];
+      stream
+        .on('data', (chunk: any) => {
+          data.push(Buffer.from(chunk));
+        })
+        .on('end', () => {
+          analysisFiles[header.name] = Buffer.concat(data).toString('utf8');
+          next();
+        });
+
+      stream.resume();
+    });
+
+    await pipeline(res.body, gunzip(), extract, { signal: this.abortController.signal });
+    return analysisFiles;
+  }
+
+  private async bundleArtifactsByOrigin(
+    remotes: Array<{ origin: string; artifacts?: boolean }>,
+  ): Promise<{ [key: string]: { analysis: Analysis } }> {
+    return (
+      await Promise.all(
+        remotes.map(async ({ origin, artifacts = true }) => {
+          let bundledAnalysis: Analysis | null = null;
+          if (artifacts) {
+            const url = `${origin}/_outsmartly_artifacts.tgz`;
+            const response = await nodeFetch(url, { signal: this.abortController.signal });
+            if (response.ok) {
+              const artifactsMap = await this.extractArtifacts(response);
+              bundledAnalysis = await this.bundleArtifactsForOrigin(origin, artifactsMap);
+            } else {
+              throw new Error(
+                `Could not download artifacts for ${origin}.\nIf this is expected, please add artifacts: false to the remote entry for ${origin}.`,
+              );
+            }
+          }
+          return { origin, analysis: bundledAnalysis };
+        }),
+      )
+    ).reduce((compileTimeArtifactsByOrigin, { origin, analysis }) => {
+      if (analysis) {
+        compileTimeArtifactsByOrigin[origin] = { analysis };
+      }
+      return compileTimeArtifactsByOrigin;
+    }, {} as { [key: string]: { analysis: Analysis } });
+  }
+
+  private async generateSitePatch({
+    code,
+    configPath,
+    host,
+    environments,
+    remotes,
+    tmpDir = './.outsmartly/',
+  }: {
+    code: string;
+    configPath: string;
+    host: string;
+    environments?: Array<{ name: string; origin?: string }>;
+    remotes?: Array<{ origin: string; artifacts?: boolean; default?: boolean }>;
+    tmpDir?: string;
+  }): Promise<PatchSite> {
+    if (typeof environments !== 'undefined' && typeof remotes !== 'undefined') {
+      throw new Error(`Cannot have both 'environments' and 'remotes' defined in ${configPath}.`);
+    }
+
+    const sitePatch: PatchSite = {
+      host,
+      configRaw: code,
+    };
+
+    if (Array.isArray(remotes)) {
+      if (!remotes.length) {
+        warn('Deploying without any defined remotes.');
+      }
+      const hasDefaultOrigin = remotes.some((origin) => origin.default === true);
+      if (!hasDefaultOrigin) {
+        throw new Error(`Missing default origin in 'remotes' in ${configPath}.`);
+      }
+      const compileTimeArtifactsByOrigin = await this.bundleArtifactsByOrigin(remotes);
+      if (!compileTimeArtifactsByOrigin) {
+        throw new Error(`No artifacts found at origins in ${configPath}.`);
+      }
+      (sitePatch as any).compileTimeArtifactsByOrigin = compileTimeArtifactsByOrigin;
+    } else if (Array.isArray(environments)) {
+      if (!environments.length) {
+        warn('Deploying without any defined environments.');
+      }
+      const { origin } = environments.find((environment) => environment.name === 'production') ?? {};
+      if (!origin) {
+        throw new Error(`Missing 'production' environment in 'environments' in ${configPath}.`);
+      }
+      sitePatch.analysis = await this.bundleAnalysisForEnvironment(tmpDir);
+    } else {
+      throw new Error(`Must have either 'environments' or 'remotes' array defined in ${configPath}.`);
+    }
+
+    return sitePatch;
+  }
+
   async deploy(bearerToken: string, environment: string, configPath: string): Promise<void> {
+    // If there's a pending deploy let's give up on this one
+    if (this.pendingDeployCount > 1) {
+      return;
+    }
+
     this.spinner.spinner = cliSpinners.dots12;
     this.spinner.color = 'blue';
     this.spinner.text = chalk.dim(chalk.blue('Bundling configuration...'));
@@ -537,33 +720,31 @@ export default class Deploy extends Command {
         this.setupWatchers();
       }
 
-      // If there's a pending deploy let's give up on this one
-      if (this.pendingDeployCount > 1) {
-        return;
-      }
-
       const context = { console };
       const options = {
         filename: configPath,
       };
-      const iife = vm.runInNewContext(`(function (module, exports) { ${chunk.code} });`, context, options);
+      const bundledConfigIife = vm.runInNewContext(`(function (module, exports) { ${chunk.code} });`, context, options);
       const module: any = { exports: {} };
-      iife(module, module.exports);
-      const { host, tmpDir = './.outsmartly/' } = module.exports.default;
+      bundledConfigIife(module, module.exports);
+      const { host, environments, remotes, tmpDir, } = module.exports.default;
 
       if (!host) {
-        throw new Error(`Missing 'host' field in ${configPath}`);
+        throw new Error(`Missing 'host' field in ${configPath}.`);
       }
 
-      const analysis = await this.bundleAnalysis(tmpDir);
+      const sitePatch = await this.generateSitePatch({
+        configPath,
+        code: chunk.code,
+        host,
+        environments,
+        remotes,
+        tmpDir,
+      });
+
       this.spinner.spinner = spinnerClockwise;
       this.spinner.text = chalk.blue(`Deploying to Outsmartly... (${environment})`);
 
-      const sitePatch: PatchSite = {
-        host,
-        configRaw: chunk.code,
-        analysis,
-      };
       const deployment = await patchSite(sitePatch, {
         bearerToken,
         cliVersion: this.config.version,

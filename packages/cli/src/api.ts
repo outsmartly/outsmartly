@@ -60,8 +60,7 @@ export async function apiFetch<R>(url: string, options: APIFetchOptions): Promis
     // Thus far this only happens when Cloudflare itself is having issues in some form or another.
     // In general, it's not a good sign since we should *always* get JSON even when there are errors
     // as long as they were handled by the API server.
-    if (text.trim().startsWith('<!DOCTYPE html>') &&
-        !process.env.OUTSMARTLY_INTERNAL_DEBUG) {
+    if (text.trim().startsWith('<!DOCTYPE html>') && !process.env.OUTSMARTLY_INTERNAL_DEBUG) {
       throw new Error(
         `API request to ${url} failed. Malformed response from server. ${e.message}\n HTTP Status: ${resp.status}\n\n <UNEXPECTED_SERVER_RESPONSE_HTML>`,
       );
@@ -141,11 +140,16 @@ export interface Analysis {
   components: { [key: string]: ComponentAnalysis };
   vfs: { [key: string]: string };
 }
-
+export interface CompileTimeArtifactsByOrigin {
+  [key: string]: {
+    analysis: Analysis;
+  };
+}
 export interface PatchSite {
   host: string;
   configRaw?: string;
   analysis?: Analysis;
+  compileTimeArtifactsByOrigin?: CompileTimeArtifactsByOrigin;
 }
 
 export async function patchSite(
