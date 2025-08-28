@@ -14,8 +14,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '16.x'
-      - name: Install npm v7
-        run: npm install -g npm@latest
+      - name: Install npm v8 (compatible with Node 16)
+        run: npm install -g npm@8
       - name: Install dependencies
         run: npm install
       - name: Build artifacts
