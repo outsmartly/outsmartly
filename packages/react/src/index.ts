@@ -8,7 +8,7 @@ try {
   if (typeof location === 'object' && typeof location.pathname === 'string') {
     rehydrateOverridesForPathname(location.pathname + location.search);
   }
-} catch (e) {
+} catch (e: any) {
   // Defensive since this code runs immediately in the module, so it could
   // prevent other code from running that is more important.
   console.error(e);
